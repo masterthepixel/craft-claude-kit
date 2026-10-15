@@ -1,0 +1,14 @@
+# Allowlist for tools/scan-public.sh. Format: <path-glob><TAB><fixed-string>[<TAB><category>]
+# A hit is ignored when the file path matches the glob, the line contains the fixed string and (when the
+# third column is given) the finding is of that category.
+# Keep entries narrow and add a comment line above each group saying why.
+
+# Pinned release checksums (public SHA-256 values published by the upstream releases).
+manifest/*	"sha256"	hex-secret
+tests/fixtures/*	"sha256"	hex-secret
+
+# GitHub Actions pinned to full commit SHAs.
+.github/workflows/*	uses:	hex-secret
+
+# Upstream example text inside LightCraft's own tool description (cmd_library_removeFolder), not a private mount.
+data/tools/lightcraft.json	/Volumes/nas	personal-path

@@ -1,0 +1,44 @@
+[
+  {
+    "tool": "draw_shape",
+    "args": {"shape": "rectangle", "x": 10, "y": 10, "width": 100, "height": 50, "fill": "#ff0000", "stroke": "none"},
+    "expect": {"isError": false, "json": {"shape": "rectangle"}},
+    "note": "one red rectangle on the default untitled artboard"
+  },
+  {
+    "tool": "save_file",
+    "args": {"path": "{root}/_doctor/smoke.vectorcraft"},
+    "expect": {"isError": false, "json": {"format": "vectorcraft", "path": {"$regex": "_doctor/smoke\\.vectorcraft$"}}},
+    "note": "native save with an explicit path inside _doctor (requires {root}/_doctor to exist)"
+  },
+  {
+    "tool": "export",
+    "args": {"path": "{root}/_doctor/smoke.svg"},
+    "expect": {"isError": false, "json": {"format": "svg", "bytes": {"$gt": 0}}},
+    "note": "svg export with an explicit path"
+  },
+  {
+    "tool": "open_file",
+    "args": {"path": "{root}/_doctor/smoke.svg"},
+    "expect": {"isError": false, "json": {"format": "svg"}},
+    "note": "read the exported file back as a new document"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "document.serialize", "params": {"format": "svg"}},
+    "expect": {"isError": false, "contains": "#ff0000"},
+    "note": "content check: the round-tripped SVG still has the red fill"
+  },
+  {
+    "tool": "render_preview",
+    "args": {"artboard": 0, "max_side": 128},
+    "expect": {"isError": false, "image": true},
+    "note": "preview returns an image block"
+  },
+  {
+    "tool": "open_file",
+    "args": {"path": "{root}/_doctor/smoke.vectorcraft"},
+    "expect": {"isError": false, "json": {"format": "vectorcraft"}},
+    "note": "the native file reopens"
+  }
+]

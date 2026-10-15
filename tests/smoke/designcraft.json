@@ -1,0 +1,114 @@
+[
+  {
+    "tool": "new_document",
+    "args": {
+      "width": 612,
+      "height": 792,
+      "pages": 1,
+      "margins": 36,
+      "title": "smoke"
+    },
+    "expect": {
+      "isError": false,
+      "json": {
+        "index": {
+          "$gte": 1
+        }
+      }
+    },
+    "note": "blank one-page document"
+  },
+  {
+    "tool": "execute",
+    "args": {
+      "command": "frame.create",
+      "params": {
+        "rect": [
+          36,
+          36,
+          400,
+          200
+        ],
+        "content": "text",
+        "text": "Smoke title\nSmoke body"
+      }
+    },
+    "expect": {
+      "isError": false,
+      "json": {
+        "id": {
+          "$gte": 0
+        },
+        "story": {
+          "$gte": 0
+        }
+      }
+    },
+    "note": "one text frame, two paragraphs"
+  },
+  {
+    "tool": "save_document",
+    "args": {
+      "path": "{root}/_doctor/smoke.designcraft"
+    },
+    "expect": {
+      "isError": false,
+      "json": {
+        "path": {
+          "$regex": "_doctor/smoke\\.designcraft$"
+        },
+        "bytes": {
+          "$gt": 0
+        }
+      }
+    },
+    "note": "explicit path inside _doctor"
+  },
+  {
+    "tool": "open_document",
+    "args": {
+      "path": "{root}/_doctor/smoke.designcraft"
+    },
+    "expect": {
+      "isError": false
+    },
+    "note": "reopen the saved file"
+  },
+  {
+    "tool": "get_story",
+    "args": {
+      "story": "{step2.story}"
+    },
+    "expect": {
+      "isError": false,
+      "json": {
+        "text": "Smoke title\nSmoke body",
+        "paragraphs": 2,
+        "overset": null
+      }
+    },
+    "note": "text survived the round trip"
+  },
+  {
+    "tool": "render_page",
+    "args": {
+      "page": 0
+    },
+    "expect": {
+      "isError": false,
+      "image": true
+    },
+    "note": "page renders to a PNG"
+  },
+  {
+    "tool": "inspect_document",
+    "args": {},
+    "expect": {
+      "isError": false,
+      "json": {
+        "pageCount": 1
+      }
+    },
+    "note": "one page"
+  }
+]

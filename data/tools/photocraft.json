@@ -1,0 +1,268 @@
+{
+  "server": {
+    "name": "photocraft",
+    "version": "0.9.0"
+  },
+  "instructions": "PhotoCraft image editor. Start with doc_new/doc_open, discover ids and parameter docs with command_list, edit with command_run or command_batch (one history step per command). Inspect with doc_inspect and render_preview; doc_save writes native .pcraft or exports by extension. File paths are relative to the read/write roots granted at launch. ui_inspect/ui_screenshot and other ui_* tools require bridge mode. Read photocraft://document and photocraft://commands for live JSON state.",
+  "tools": [
+    {
+      "name": "command_batch",
+      "description": "Run several engine commands in one call, in order (fewer round trips). Returns {completed, failed, results:[{ok, result|error}]}; stops at the first error unless stop_on_error is false. Not an atomic transaction: earlier successful steps stay applied (no rollback).",
+      "params": [
+        "steps",
+        "stop_on_error"
+      ],
+      "required": [
+        "steps"
+      ]
+    },
+    {
+      "name": "command_list",
+      "description": "List engine commands. Returns a JSON array (no wrapper object) of {id, label, menu: [path], shortcut: string|null, params: doc string, enabled: bool, disabledReason: string|null, needsDocument: bool}. `disabledReason` says why a command is off (null when enabled); `needsDocument` is true when it is off because no document is open: create or open one first (doc_new, doc_open).",
+      "params": [
+        "enabled_only",
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "command_run",
+      "description": "Run an engine command by id with JSON params (see command_list). Returns the command's JSON result. Long commands (filters, Content-Aware Fill/Scale, Photomerge, brush import) wait to finish unless `wait` is false: then they run as a background job and the result is {job: id} (see jobs_list, jobs_cancel).",
+      "params": [
+        "id",
+        "params",
+        "wait"
+      ],
+      "required": [
+        "id"
+      ]
+    },
+    {
+      "name": "control_call",
+      "description": "Bridge mode: call any control-protocol method (docs/control-protocol.md) with raw params.",
+      "params": [
+        "method",
+        "params"
+      ],
+      "required": [
+        "method"
+      ]
+    },
+    {
+      "name": "doc_close",
+      "description": "Close a document (default: the active one) without saving.",
+      "params": [
+        "index"
+      ],
+      "required": []
+    },
+    {
+      "name": "doc_export",
+      "description": "Export the document to another format (same as doc_save with an explicit path/format).",
+      "params": [
+        "dpxBits",
+        "format",
+        "index",
+        "path",
+        "quality",
+        "tgaBits",
+        "tiffLayers"
+      ],
+      "required": []
+    },
+    {
+      "name": "doc_export_data_sets",
+      "description": "Export every data set of the document as its own flattened file beneath the write root (the capability-scoped Export Data Sets). The batch is planned first, so colliding filenames are refused before any file is written.",
+      "params": [
+        "data_sets",
+        "dir",
+        "format",
+        "index",
+        "naming"
+      ],
+      "required": [
+        "dir"
+      ]
+    },
+    {
+      "name": "doc_export_layers",
+      "description": "Export each exported layer of the document as its own file beneath the write root (the capability-scoped Layers to Files). A file that already exists is an error, not an overwrite.",
+      "params": [
+        "dir",
+        "format",
+        "index",
+        "prefix",
+        "quality",
+        "visible_only"
+      ],
+      "required": [
+        "dir"
+      ]
+    },
+    {
+      "name": "doc_import_data_sets",
+      "description": "Import a data set CSV from the read root into the document (the capability-scoped Import Variable Data Sets).",
+      "params": [
+        "delimiter",
+        "index",
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "doc_inspect",
+      "description": "Document state as JSON: layer tree (top to bottom), history, selection, active layer.",
+      "params": [
+        "index"
+      ],
+      "required": []
+    },
+    {
+      "name": "doc_new",
+      "description": "Create a new document (defaults: 1920x1080 RGB 8-bit white).",
+      "params": [
+        "background",
+        "depth",
+        "height",
+        "mode",
+        "name",
+        "width"
+      ],
+      "required": []
+    },
+    {
+      "name": "doc_open",
+      "description": "Open an image or document file and make it active. Returns index, size and import warnings.",
+      "params": [
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "doc_place",
+      "description": "Place a file into the document as a Smart Object layer (Place Embedded), reading `path` beneath the read root. `scale` (percent), `fit` and `center` are the command's own.",
+      "params": [
+        "center",
+        "fit",
+        "index",
+        "path",
+        "scale"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "doc_render_preview",
+      "description": "Render the flattened document and return it as a PNG image (bridge mode: window screenshot).",
+      "params": [
+        "index",
+        "max_side"
+      ],
+      "required": []
+    },
+    {
+      "name": "doc_save",
+      "description": "Save the document. `.pcraft` is the lossless native format (incremental); other extensions (psd, png, jpg, tif, webp, exr, …) export. Without `path` only a PSD, PSB or .pcraft document is written back to its own         file. Returns warnings about anything the format cannot hold.",
+      "params": [
+        "dpxBits",
+        "format",
+        "index",
+        "path",
+        "quality",
+        "tgaBits",
+        "tiffLayers"
+      ],
+      "required": []
+    },
+    {
+      "name": "doc_select",
+      "description": "Make the document at `index` active.",
+      "params": [
+        "index"
+      ],
+      "required": [
+        "index"
+      ]
+    },
+    {
+      "name": "jobs_cancel",
+      "description": "Cancel a background job by id (or every running job when `job` is omitted). The document is left unchanged.",
+      "params": [
+        "job"
+      ],
+      "required": []
+    },
+    {
+      "name": "jobs_list",
+      "description": "List background jobs: running ones with progress (0-1), message and elapsed time, then the last few that ended (state done|failed|cancelled with their result or error). Finished jobs are applied first.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "render_preview",
+      "description": "Render a bounded flattened PNG preview (bridge mode: app window screenshot).",
+      "params": [
+        "index",
+        "max_side"
+      ],
+      "required": []
+    },
+    {
+      "name": "session_list",
+      "description": "List open documents (index, name, size, dirty) and the active index.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "ui_inspect",
+      "description": "Bridge mode: full UI state of the live app (tool, panels, views, dialogs, windows). For the menu tree, call `control_call` with method `ui.menu.list`.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "ui_menu_invoke",
+      "description": "Bridge mode: activate a menu item by id.",
+      "params": [
+        "id"
+      ],
+      "required": [
+        "id"
+      ]
+    },
+    {
+      "name": "ui_pointer",
+      "description": "Bridge mode: send pointer events (document coordinates) to the active tool; with a Color Picker open they sample the image into it instead.",
+      "params": [
+        "button",
+        "events",
+        "modifiers"
+      ],
+      "required": [
+        "events"
+      ]
+    },
+    {
+      "name": "ui_screenshot",
+      "description": "Bridge mode: screenshot of the live app window as PNG.",
+      "params": [
+        "max_side"
+      ],
+      "required": []
+    },
+    {
+      "name": "ui_set",
+      "description": "Bridge mode: change UI state (tool, panels, dock, zoom, center, fit, theme, brush settings; see `fields`). Unknown fields are an error.",
+      "params": [
+        "fields"
+      ],
+      "required": [
+        "fields"
+      ]
+    }
+  ]
+}

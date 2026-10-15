@@ -1,0 +1,265 @@
+#!/bin/bash
+# shellcheck disable=SC2012,SC2015,SC2016,SC2034,SC2046,SC2086,SC2155,SC2317
+# Fake `claude` for the kit's tests (tests/isolated.sh copies it to <sandbox>/bin/claude).
+#
+# It implements just what the installer, uninstaller and doctor use, against the same JSON file the
+# real Claude Code uses for user-scope MCP servers ($CLAUDE_CONFIG_DIR/.claude.json):
+#
+#   claude --version                              prints "2.1.0 (Claude Code)" (FAKE_CLAUDE_VERSION overrides)
+#   claude mcp add [-s SCOPE] [-e K=V] NAME [--] COMMAND [ARGS...]
+#   claude mcp remove NAME [-s SCOPE]
+#   claude mcp get NAME
+#   claude mcp list
+#
+# Format written (user scope):  {"mcpServers": {NAME: {"type":"stdio","command":C,"args":[..],"env":{}}}}
+# Like the real CLI: `add` of an existing name fails ("already exists"), `remove` of an unknown name fails,
+# no -s means local scope (stored under projects[<cwd>].mcpServers). Project scope (.mcp.json) is refused.
+#
+# Every invocation is appended to $FAKE_CLAUDE_LOG as one JSON array of its arguments per line.
+# Failure injection: FAKE_CLAUDE_FAIL_ADD="app1,app2" makes `mcp add` of those names exit 1;
+# FAKE_CLAUDE_FAIL_ADD_ARG=TEXT makes an `mcp add` exit 1 when its command or an argument contains TEXT.
+# Safety: it refuses to run unless tests/isolated.sh set FAKE_CLAUDE_SANDBOX=1 and CLAUDE_CONFIG_DIR, so it
+# can never touch a real ~/.claude.json.
+set -u
+
+if [ "${FAKE_CLAUDE_SANDBOX:-}" != 1 ] || [ -z "${CLAUDE_CONFIG_DIR:-}" ]; then
+  echo "fake claude: refusing to run outside tests/isolated.sh (FAKE_CLAUDE_SANDBOX / CLAUDE_CONFIG_DIR unset)" >&2
+  exit 99
+fi
+JQ=$(command -v jq 2>/dev/null || true)
+[ -n "$JQ" ] || JQ=${FAKE_CLAUDE_JQ:-}
+if [ -z "$JQ" ] || [ ! -x "$JQ" ]; then
+  echo "fake claude: jq not found" >&2
+  exit 99
+fi
+CFG=$CLAUDE_CONFIG_DIR/.claude.json
+
+die() { # MESSAGE
+  echo "$*" >&2
+  exit 1
+}
+
+json_array() { # ARGS... -> JSON array of strings
+  if [ $# -eq 0 ]; then
+    echo '[]'
+  else
+    printf '%s\0' "$@" | "$JQ" -Rsc 'split("\u0000")[:-1]'
+  fi
+}
+
+if [ -n "${FAKE_CLAUDE_LOG:-}" ]; then
+  json_array "$@" >> "$FAKE_CLAUDE_LOG"
+fi
+
+cfg_init() {
+  if [ ! -f "$CFG" ]; then
+    mkdir -p "$(dirname "$CFG")" || die "cannot create $(dirname "$CFG")"
+    echo '{}' > "$CFG"
+    chmod 600 "$CFG"
+  fi
+  "$JQ" -e 'type == "object"' "$CFG" > /dev/null 2>&1 || die "fake claude: $CFG is not a JSON object"
+}
+
+cfg_edit() { # JQ-ARGS... PROGRAM : rewrite $CFG with the jq program (the last argument), atomically
+  local tmp
+  tmp=$(mktemp "$CFG.tmp.XXXXXX") || die "fake claude: mktemp failed"
+  if "$JQ" "$@" "$CFG" > "$tmp"; then
+    chmod 600 "$tmp"
+    mv "$tmp" "$CFG"
+  else
+    rm -f "$tmp"
+    die "fake claude: cannot update $CFG"
+  fi
+}
+
+scope_expr() { # SCOPE -> jq path of that scope's server map (uses $cwd)
+  case "$1" in
+    user) printf '%s' '.mcpServers' ;;
+    local) printf '%s' '.projects[$cwd].mcpServers' ;;
+    project) die "fake claude: project scope (.mcp.json) is not supported by the test double" ;;
+    *) die "error: invalid scope: $1. Must be one of: local, user, project" ;;
+  esac
+}
+
+scope_label() {
+  case "$1" in
+    user) printf 'User config (available in all your projects)' ;;
+    local) printf 'Local config (private to you in this project)' ;;
+  esac
+}
+
+has_server() { # SCOPE NAME -> 0 if present
+  local expr
+  expr=$(scope_expr "$1")
+  [ -f "$CFG" ] || return 1
+  [ "$("$JQ" -r --arg n "$2" --arg cwd "$PWD" "($expr // {}) | has(\$n)" "$CFG" 2> /dev/null)" = true ]
+}
+
+mcp_add() {
+  local scope=local name='' cmd='' pos=0 e
+  local cargs=() envs=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -s | --scope)
+        [ $# -ge 2 ] || die "error: option '$1' argument missing"
+        scope=$2
+        shift 2
+        ;;
+      --scope=*)
+        scope=${1#--scope=}
+        shift
+        ;;
+      -t | --transport)
+        [ $# -ge 2 ] || die "error: option '$1' argument missing"
+        [ "$2" = stdio ] || die "fake claude: only the stdio transport is supported"
+        shift 2
+        ;;
+      -e | --env)
+        [ $# -ge 2 ] || die "error: option '$1' argument missing"
+        envs+=("$2")
+        shift 2
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*) die "error: unknown option '$1'" ;;
+      *)
+        pos=$((pos + 1))
+        case $pos in
+          1) name=$1 ;;
+          2) cmd=$1 ;;
+          *) cargs+=("$1") ;;
+        esac
+        shift
+        ;;
+    esac
+  done
+  while [ $# -gt 0 ]; do
+    if [ -z "$cmd" ]; then cmd=$1; else cargs+=("$1"); fi
+    shift
+  done
+  [ -n "$name" ] || die "error: missing required argument 'name'"
+  [ -n "$cmd" ] || die "error: missing required argument 'commandOrUrl'"
+  scope_expr "$scope" > /dev/null
+  case ",${FAKE_CLAUDE_FAIL_ADD:-}," in *",$name,"*) die "fake claude: injected failure adding $name" ;; esac
+  if [ -n "${FAKE_CLAUDE_FAIL_ADD_ARG:-}" ]; then
+    for a in "$cmd" ${cargs[@]+"${cargs[@]}"}; do
+      case "$a" in *"$FAKE_CLAUDE_FAIL_ADD_ARG"*) die "fake claude: injected failure adding $name (argument match)" ;; esac
+    done
+  fi
+  cfg_init
+  if has_server "$scope" "$name"; then
+    die "MCP server $name already exists in $scope config"
+  fi
+  for e in ${envs[@]+"${envs[@]}"}; do
+    case "$e" in *=*) ;; *) die "error: invalid environment variable format: $e" ;; esac
+  done
+  local args_json env_json expr
+  args_json=$(json_array ${cargs[@]+"${cargs[@]}"})
+  if [ ${#envs[@]} -eq 0 ]; then
+    env_json='{}'
+  else
+    env_json=$(printf '%s\0' "${envs[@]}" | "$JQ" -Rsc 'split("\u0000")[:-1] | map({(sub("=.*$"; "")): sub("^[^=]*="; "")}) | add')
+  fi
+  expr=$(scope_expr "$scope")
+  cfg_edit --arg n "$name" --arg cwd "$PWD" --arg c "$cmd" --argjson a "$args_json" --argjson e "$env_json" \
+    "$expr[\$n] = {type: \"stdio\", command: \$c, args: \$a, env: \$e}"
+  echo "Added stdio MCP server $name with command: $cmd ${cargs[*]+${cargs[*]}} to $scope config"
+  echo "File modified: $CFG"
+}
+
+mcp_remove() {
+  local scope='' name=''
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -s | --scope)
+        [ $# -ge 2 ] || die "error: option '$1' argument missing"
+        scope=$2
+        shift 2
+        ;;
+      --scope=*)
+        scope=${1#--scope=}
+        shift
+        ;;
+      -*) die "error: unknown option '$1'" ;;
+      *)
+        [ -z "$name" ] || die "error: too many arguments"
+        name=$1
+        shift
+        ;;
+    esac
+  done
+  [ -n "$name" ] || die "error: missing required argument 'name'"
+  if [ -z "$scope" ]; then
+    local found='' s
+    for s in local user; do
+      if has_server "$s" "$name"; then found="$found $s"; fi
+    done
+    case "$found" in
+      '') die "No MCP server found with name: \"$name\"" ;;
+      ' local user' | ' user local') die "MCP server \"$name\" exists in multiple scopes: local, user. Please specify which scope to remove from with -s" ;;
+    esac
+    scope=${found# }
+  fi
+  scope_expr "$scope" > /dev/null
+  has_server "$scope" "$name" || die "No $scope-scoped MCP server found with name: $name"
+  local expr
+  expr=$(scope_expr "$scope")
+  cfg_edit --arg n "$name" --arg cwd "$PWD" "del($expr[\$n])"
+  echo "Removed MCP server $name from $scope config"
+  echo "File modified: $CFG"
+}
+
+mcp_get() {
+  local name=${1:-} scope s
+  [ -n "$name" ] || die "error: missing required argument 'name'"
+  for s in local user; do
+    if has_server "$s" "$name"; then scope=$s; break; fi
+  done
+  [ -n "${scope:-}" ] || die "No MCP server found with name: $name"
+  local expr
+  expr=$(scope_expr "$scope")
+  echo "$name:"
+  echo "  Scope: $(scope_label "$scope")"
+  echo "  Status: ✓ Connected"
+  echo "  Type: stdio"
+  "$JQ" -r --arg n "$name" --arg cwd "$PWD" "$expr[\$n] | \"  Command: \" + .command, \"  Args: \" + (.args | join(\" \")), \"  Environment:\"" "$CFG"
+  echo
+  echo "To remove this server, run: claude mcp remove \"$name\" -s $scope"
+}
+
+mcp_list() {
+  local any=0 s expr lines
+  [ -f "$CFG" ] || { echo "No MCP servers configured. Use \`claude mcp add\` to add a server."; return 0; }
+  for s in user local; do
+    expr=$(scope_expr "$s")
+    lines=$("$JQ" -r --arg cwd "$PWD" "($expr // {}) | to_entries[] | .key + \": \" + .value.command + \" \" + (.value.args | join(\" \")) + \" - ✓ Connected\"" "$CFG")
+    if [ -n "$lines" ]; then
+      any=1
+      echo "$lines"
+    fi
+  done
+  [ "$any" = 1 ] || echo "No MCP servers configured. Use \`claude mcp add\` to add a server."
+}
+
+case "${1:-}" in
+  --version | -v | -V)
+    echo "${FAKE_CLAUDE_VERSION:-2.1.0 (Claude Code)}"
+    ;;
+  mcp)
+    shift
+    sub=${1:-}
+    [ $# -eq 0 ] || shift
+    case "$sub" in
+      add) mcp_add "$@" ;;
+      remove | rm) mcp_remove "$@" ;;
+      get) mcp_get "$@" ;;
+      list | ls) mcp_list "$@" ;;
+      *) die "fake claude: unsupported command: mcp $sub" ;;
+    esac
+    ;;
+  *)
+    die "fake claude: unsupported invocation: $*"
+    ;;
+esac

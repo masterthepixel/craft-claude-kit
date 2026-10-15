@@ -1,0 +1,38 @@
+[
+  {
+    "tool": "command_run",
+    "args": {"id": "app.gpu", "params": {}},
+    "expect": {"isError": false, "json": {"enabled": {"$exists": true}}},
+    "note": "GPU setup must not crash the server; under the sandbox profile it exits with code -11 when the binary directory is blocked"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "keyword.create", "params": {"name": "craft-smoke"}},
+    "expect": {"isError": false, "json": {"keyword": "craft-smoke"}},
+    "note": "a keyword in the in-memory library"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "keyword.export", "params": {"path": "{root}/_doctor/keywords.txt"}},
+    "expect": {"isError": false, "json": {"keywords": 1, "unwritable": []}},
+    "note": "write a file inside the fence; _doctor/ must already exist"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "keyword.delete", "params": {"keyword": "craft-smoke"}},
+    "expect": {"isError": false},
+    "note": "remove it so the read-back has to add it"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "keyword.import", "params": {"path": "{root}/_doctor/keywords.txt"}},
+    "expect": {"isError": false, "json": {"added": 1}},
+    "note": "read the exported file back"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "keyword.list", "params": {}},
+    "expect": {"isError": false, "contains": "craft-smoke"},
+    "note": "the keyword is back in the library"
+  }
+]

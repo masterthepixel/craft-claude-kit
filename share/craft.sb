@@ -1,0 +1,77 @@
+;; craft.sb: macOS sandbox profile used by bin/craft-sandbox (craft-claude-kit) to fence one Craft
+;; CLI that has no confinement flag of its own.
+;;
+;; Parameters, passed by craft-sandbox with `sandbox-exec -D`; all are real paths (symlinks resolved):
+;;   ROOT  the one folder the program may read and write (that app's workspace folder)
+;;   HOME  the user's home folder
+;;   BIN   the program file itself
+;;   BINDIR the folder that holds the program file (read-only listing, see rule 2)
+;;
+;; Design: start from (allow default) and subtract, instead of (deny default) and add. The Craft
+;; CLIs are large programs that load many system frameworks, fonts and caches outside the home
+;; folder; an allow-list profile would break with every upstream release. So this profile removes
+;; exactly four things a confined document tool should not have: the network, the user's own
+;; files, write access to the rest of the disk, and Mach service lookups (which is how a program
+;; asks macOS to start another program outside the sandbox).
+;;
+;; Rules are evaluated last-match-wins: an allow placed after a deny carves out an exception.
+;;
+;; Limits, stated plainly:
+;;  - Everything outside HOME and /Volumes stays readable (system files, /Applications, /opt, /usr).
+;;  - /private/tmp and /private/var/folders stay writable. They are shared with every other process,
+;;    including the other sandboxed Craft apps, so do not treat them as private.
+;;  - Mach services are denied (rule 4) except Metal's shader compiler (rule 4a); Apple Events and
+;;    the pasteboard were not tested separately.
+;;  - Signals are NOT confined: the program can signal (stop, kill) other processes of the same user
+;;    (tested 2026-10-14). (deny signal) + (allow signal (target self)) blocked that and passed 7 of the 8
+;;    smoke tests; it is not used because it was never checked against LightCraft.
+;;  - sandbox-exec is deprecated by Apple but still works on current macOS.
+(version 1)
+(allow default)
+
+;; 1. No network at all, including local (unix-domain) sockets. The MCP server talks to Claude Code
+;;    over stdin/stdout, which is not network. This also disables the apps' own --connect/bridge
+;;    modes, which this kit does not use.
+(deny network*)
+
+;; 2. Reads: nothing under the home folder or under /Volumes (external drives, network shares),
+;;    except ROOT and the program file. Reading the metadata of HOME itself (not its contents) stays
+;;    allowed because path lookups and some libraries stat() it.
+(deny file-read* (subpath (param "HOME")) (subpath "/Volumes"))
+(allow file-read* (subpath (param "ROOT")) (literal (param "BIN")))
+(allow file-read-metadata (literal (param "HOME")))
+;; The program's own folder (a single directory entry, not its subfolders): GPU-using apps such as
+;; LightCraft look next to their executable while Metal starts, and crash with SIGSEGV when that is
+;; denied (verified on LightCraft 0.8.0, macOS 26). This reveals only the file names in that
+;; folder, not their contents.
+(allow file-read* (literal (param "BINDIR")))
+
+;; 3. Writes: only ROOT, the temp folders (macOS frameworks keep per-user caches and temp files in
+;;    /private/var/folders and fail without them) and the device nodes a command-line program
+;;    writes to: /dev/null, its terminal, and its own file descriptors. Everything else on disk is
+;;    read-only to the process.
+(deny file-write*
+  (require-not
+    (require-any
+      (subpath (param "ROOT"))
+      (subpath "/private/tmp")
+      (subpath "/private/var/folders")
+      (literal "/dev/null")
+      (literal "/dev/tty")
+      (regex #"^/dev/ttys[0-9]+$")
+      (regex #"^/dev/fd/[0-9]+$"))))
+
+;; 4. Mach services. macOS starts a program requested through LaunchServices (`open`, an app
+;;    launch) from launchd, not as a child of this process, so that program would not inherit the
+;;    rules above: it could read the home folder and use the network. Denying Mach lookups closes
+;;    that route (tested: `open` of an app bundle then fails with kLSNoExecutableErr and nothing
+;;    starts). Narrower denies (launchservicesd, lsd.*, coreservicesd) were tried and did not stop
+;;    the launch.
+(deny mach-lookup)
+;; 4a. One exception: Metal's shader compiler. GPU apps (LightCraft) look up the XPC service
+;;     com.apple.MTLCompilerService the first time they render; without it Metal aborts the process
+;;     (exit -6 on LightCraft 0.8.0, macOS 26). It is an Apple XPC service inside Metal.framework
+;;     that compiles shaders and runs in its own Apple sandbox; it cannot be asked to start other
+;;     programs, so the LaunchServices route above stays closed (the doctor's `open` probe checks
+;;     that). With this exception all 8 sandboxed Craft CLIs pass their smoke tests (2026-10-15).
+(allow mach-lookup (xpc-service-name "com.apple.MTLCompilerService"))

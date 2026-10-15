@@ -1,0 +1,285 @@
+{
+  "server": {
+    "name": "designcraft",
+    "version": "0.8.0"
+  },
+  "instructions": "DesignCraft is a page-layout app (an InDesign clone). Coordinates are points in spread space (y down; on a single-page spread the page's top-left is (0,0); a default Letter page is 612×792). Every action is a command: find ids and parameters with list_commands and run them with execute (or several with batch). Typical flow: new_document → execute frame.create {rect:[x0,y0,x1,y1], content:\"text\", text:\"…\"} → set_story_text / execute type.char / style.paragraph.apply → render_page to look at the result. inspect_document lists pages, items (ids, bounds), stories (overset) and styles. place_image puts a picture on the page. Backend: headless (in-process engine, no window). Community: https://discord.gg/artcraft (Discord), https://getartcraft.com/apps/designcraft (app page), https://github.com/storytold/designcraft (source). The `app.links` command returns these links.",
+  "tools": [
+    {
+      "name": "batch",
+      "description": "Run several commands in order, stopping at the first error. Returns each result; on failure also the failing index and message (earlier commands stay applied; use edit.undo to revert them). Later steps can use earlier results: a parameter string \"$N.path\" is replaced by that value of step N's result (0-based; \"$last.path\" for the previous step), e.g. after frame.create → {\"id\": 8, \"story\": 9}, {\"story\": \"$0.story\"} passes 9; \"${N.path}\" interpolates into longer strings. Give `commands`, or `script` text (one `command.id {json}` per line).",
+      "params": [
+        "commands",
+        "script"
+      ],
+      "required": []
+    },
+    {
+      "name": "click",
+      "description": "Click at a screen point (egui points, top-left of the window = 0,0) through the real pointer path: reaches menus, panels, flyouts and dialogs. Find coordinates with ui_inspect and screenshot. Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [
+        "alt",
+        "button",
+        "cmd",
+        "count",
+        "ctrl",
+        "shift",
+        "x",
+        "y"
+      ],
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "name": "dialog_cancel",
+      "description": "Press Cancel in the open dialog. Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "dialog_confirm",
+      "description": "Press OK in the open dialog. Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "dialog_set",
+      "description": "Set a field of the open dialog (see ui_inspect → dialog for its fields). Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [
+        "field",
+        "value"
+      ],
+      "required": [
+        "field",
+        "value"
+      ]
+    },
+    {
+      "name": "drag",
+      "description": "Press at (x, y), move to (toX, toY) in `steps` moves and release, in screen points through the real pointer path. Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [
+        "alt",
+        "cmd",
+        "shift",
+        "steps",
+        "toX",
+        "toY",
+        "x",
+        "y"
+      ],
+      "required": [
+        "x",
+        "y",
+        "toX",
+        "toY"
+      ]
+    },
+    {
+      "name": "execute",
+      "description": "Run any DesignCraft command by id with JSON params (ids and params from list_commands). Examples: {\"command\":\"frame.create\",\"params\":{\"rect\":[36,36,576,300],\"content\":\"text\",\"text\":\"Hello\"}} → {id, story}; {\"command\":\"type.char\",\"params\":{\"size\":24}}; {\"command\":\"edit.undo\"}. Coordinates are points in spread space. In the desktop app the UI-only commands (view.*, window.*, help.*, edit.dynamicSpelling, and app.* except app.links, which works everywhere) work too.",
+      "params": [
+        "command",
+        "params"
+      ],
+      "required": [
+        "command"
+      ]
+    },
+    {
+      "name": "export_png",
+      "description": "Export one page as a PNG (or JPEG if the path ends in .jpg) file. Returns the path and pixel size.",
+      "params": [
+        "page",
+        "path",
+        "scale"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "get_story",
+      "description": "Full text of a story plus its length, frames, paragraph count, line count and overset position (length and positions are UTF-8 byte offsets, the unit text.select takes). Identify it by `story` id or by a text `frame` id (default: the selection).",
+      "params": [
+        "frame",
+        "story"
+      ],
+      "required": []
+    },
+    {
+      "name": "inspect_document",
+      "description": "Summary of the active document: settings, pages (index, name, bounds, margins, columns), spreads with items (id, kind, bounds, fill, stroke, story), stories (id, frames, length in UTF-8 bytes, overset, preview), layers, paragraph/character styles, swatches, selection, active tool.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "key",
+      "description": "Press a key with modifiers, e.g. {key:\"Z\", cmd:true} (undo), {key:\"Escape\"}, {key:\"Enter\"}, {key:\"Left\", shift:true}. In the desktop app it goes through the real keyboard path; headless it goes to the active tool (caret keys while typing), then command shortcuts, then tool shortcuts.",
+      "params": [
+        "alt",
+        "cmd",
+        "ctrl",
+        "key",
+        "shift"
+      ],
+      "required": [
+        "key"
+      ]
+    },
+    {
+      "name": "list_commands",
+      "description": "List DesignCraft commands: id, label, menu path, shortcut, parameter description and whether it can run right now. Every user-visible action is a command (frame.create, text.insert, type.char, style.paragraph.apply, layout.pages.insert, object.fill, transform.move, edit.undo…); run them with execute or batch.",
+      "params": [
+        "enabledOnly",
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "menu_list",
+      "description": "The menu bar tree (menus, entries as cmd:/ui: command ids, separators, submenus). Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "new_document",
+      "description": "Create a new document and make it active. Sizes are in points (72 pt = 1 in). sample:true opens the multi-page magazine sample instead.",
+      "params": [
+        "bleed",
+        "columns",
+        "facingPages",
+        "gutter",
+        "height",
+        "margins",
+        "pages",
+        "preset",
+        "sample",
+        "title",
+        "width"
+      ],
+      "required": []
+    },
+    {
+      "name": "open_document",
+      "description": "Open a .designcraft file as a new, active document.",
+      "params": [
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "place_image",
+      "description": "Place an image (PNG, JPEG, WebP, GIF, TIFF) from a file `path` or `base64` data. It goes into `frame` (or the selected empty/graphic frame), otherwise into a new frame at x, y (default: the page's top-left margin) with an optional width.",
+      "params": [
+        "base64",
+        "frame",
+        "name",
+        "path",
+        "spread",
+        "width",
+        "x",
+        "y"
+      ],
+      "required": []
+    },
+    {
+      "name": "pointer",
+      "description": "Drive the active tool with mouse events, exactly like the mouse would. Coordinates are spread points (space \"doc\", default) or, in the desktop app, screen points (space \"screen\"). Example: a text frame with the type tool: {tool:\"type\", events:[{kind:\"down\",x:72,y:72},{kind:\"drag\",x:300,y:200},{kind:\"up\",x:300,y:200}]} leaves a caret in the new frame, ready for type_text. Returns the selection and the active tool.",
+      "params": [
+        "events",
+        "mods",
+        "tool"
+      ],
+      "required": [
+        "events"
+      ]
+    },
+    {
+      "name": "render_page",
+      "description": "Render one page of the active document (printing items only, like Preview) and return it as a PNG image. Optionally also write it to `path`.",
+      "params": [
+        "bleed",
+        "page",
+        "path",
+        "scale"
+      ],
+      "required": []
+    },
+    {
+      "name": "save_document",
+      "description": "Save the active document in the native .designcraft format.",
+      "params": [
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "screenshot",
+      "description": "Capture the whole app window (menus, panels, canvas) and return it as a PNG image. Optionally also keep it at `path`. Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "select_tool",
+      "description": "Switch the active tool (as clicking it in the Tools panel). Ids: selection, directSelection, type, rectangleFrame, ellipseFrame, polygonFrame, rectangle, ellipse, polygon, line, hand, zoom, …",
+      "params": [
+        "tool"
+      ],
+      "required": [
+        "tool"
+      ]
+    },
+    {
+      "name": "set_story_text",
+      "description": "Replace the whole text of a story (keeps the first paragraph's and character's formatting). Use \\n for paragraph breaks. Identify the story by `story` id or by a text `frame` id.",
+      "params": [
+        "frame",
+        "story",
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    },
+    {
+      "name": "type_text",
+      "description": "Type text at the text insertion point, independently of the active tool, or into the focused dialog field in the desktop app. Put a caret first with pointer (tool \"type\") or execute text.placeCaret / text.select.",
+      "params": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    },
+    {
+      "name": "ui_inspect",
+      "description": "UI state: active tool, panels, view (zoom, origin), canvas rect in screen points, window size, documents, open dialog, perf. Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "ui_set",
+      "description": "Change UI state: panel to open, brightness, rulers/guides/frameEdges/baselineGrid/textThreads, screenMode, zoom, page (1-based), fit (page|spread). Desktop app only (`designcraft-cli mcp --connect PORT`).",
+      "params": [
+        "baselineGrid",
+        "brightness",
+        "fit",
+        "frameEdges",
+        "guides",
+        "page",
+        "panel",
+        "rulers",
+        "screenMode",
+        "textThreads",
+        "zoom"
+      ],
+      "required": []
+    }
+  ]
+}

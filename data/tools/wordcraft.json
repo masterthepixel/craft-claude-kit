@@ -1,0 +1,154 @@
+{
+  "server": {
+    "name": "wordcraft",
+    "version": "0.7.0"
+  },
+  "instructions": "WordCraft is a word processor (a Microsoft Word clone). Every action is a command: find ids and parameters with list_commands and run them with execute (or several with batch). Positions are {story:\"body\", path:[block,(row,cell,block)...], off:byteOffset}. Typical flow: new_document → type_text \"Hello\" → execute text.newParagraph → execute para.style {style:\"Heading 1\"} → select_text {text:\"Hello\"} → execute format.bold → inspect_document to verify → render_page to look at the result → save {path:\"out.docx\"}. Backend: headless session (no window). Community: https://discord.gg/artcraft · https://getartcraft.com/apps/wordcraft · https://github.com/storytold/wordcraft",
+  "tools": [
+    {
+      "name": "batch",
+      "description": "Run commands in order; stops at the first error unless keepGoing.",
+      "params": [
+        "commands",
+        "keepGoing"
+      ],
+      "required": [
+        "commands"
+      ]
+    },
+    {
+      "name": "click",
+      "description": "Click at window coordinates (desktop app only).",
+      "params": [
+        "cmd",
+        "count",
+        "shift",
+        "x",
+        "y"
+      ],
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "name": "execute",
+      "description": "Run one command by id with params, e.g. {command:\"format.bold\"} or {command:\"insert.table\", params:{rows:3, cols:4}}.",
+      "params": [
+        "command",
+        "params"
+      ],
+      "required": [
+        "command"
+      ]
+    },
+    {
+      "name": "get_text",
+      "description": "Plain text of the document body.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "inspect_document",
+      "description": "Structure: blocks with text, styles, formatting runs, lists, tables, sections, parts, selection, pages.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "key",
+      "description": "Press a key with modifiers (desktop app only), e.g. {key:\"B\", cmd:true}.",
+      "params": [
+        "alt",
+        "cmd",
+        "key",
+        "shift"
+      ],
+      "required": [
+        "key"
+      ]
+    },
+    {
+      "name": "list_commands",
+      "description": "Every WordCraft command: id, label, ribbon location, shortcut and params. Filter with `query`.",
+      "params": [
+        "query"
+      ],
+      "required": []
+    },
+    {
+      "name": "new_document",
+      "description": "Start a document: blank, sample, letter, resume or report.",
+      "params": [
+        "template"
+      ],
+      "required": []
+    },
+    {
+      "name": "open_document",
+      "description": "Open a .docx, .doc, .odt, .rtf, .md, .tex, .html, .txt or .json file, or any other text file (.m3u, .log, .ini…) as plain text.",
+      "params": [
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "parity",
+      "description": "WordCraft's command coverage of the word-processor feature catalog.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "render_page",
+      "description": "Render a page to PNG to look at the result.",
+      "params": [
+        "page",
+        "scale"
+      ],
+      "required": []
+    },
+    {
+      "name": "save_document",
+      "description": "Save (format from the extension: docx, pdf, odt, rtf, html, md, tex, txt, png).",
+      "params": [
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "screenshot",
+      "description": "Screenshot of the whole WordCraft window (desktop app only).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "select_text",
+      "description": "Select the n-th occurrence of some text.",
+      "params": [
+        "occurrence",
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    },
+    {
+      "name": "type_text",
+      "description": "Type at the caret (replacing the selection). Use \\n... for line breaks inside text; use execute text.newParagraph for new paragraphs, or `paragraphs: true` to split lines into paragraphs.",
+      "params": [
+        "paragraphs",
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    },
+    {
+      "name": "ui_inspect",
+      "description": "UI state: tab, panes, dialog, page rectangles on screen, caret (desktop app only).",
+      "params": [],
+      "required": []
+    }
+  ]
+}

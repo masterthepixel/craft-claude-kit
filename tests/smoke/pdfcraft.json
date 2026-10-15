@@ -1,0 +1,50 @@
+[
+  {
+    "tool": "doc_create",
+    "args": {"from": "text", "text": "PdfCraft smoke test\nLine two 42\nSecret 123-45-6789"},
+    "expect": {"json": {"pages": 1}},
+    "note": "make a one-page PDF from text"
+  },
+  {
+    "tool": "redact_mark",
+    "args": {"doc": "{step1.doc}", "find": "123-45-6789"},
+    "expect": {"json": {"marked": 1}},
+    "note": "mark the number (marks only, nothing removed yet)"
+  },
+  {
+    "tool": "redact_apply",
+    "args": {"doc": "{step1.doc}"},
+    "expect": {"json": {"applied": 1}},
+    "note": "remove the marked text"
+  },
+  {
+    "tool": "doc_save",
+    "args": {"doc": "{step1.doc}", "path": "{root}/_doctor/smoke.pdf"},
+    "expect": {"json": {"document.dirty": false}},
+    "note": "save with an explicit path inside the fence, under _doctor"
+  },
+  {
+    "tool": "doc_open",
+    "args": {"path": "{root}/_doctor/smoke.pdf"},
+    "expect": {"json": {"pages": 1}},
+    "note": "reopen the saved file"
+  },
+  {
+    "tool": "text_extract",
+    "args": {"doc": "{step5.doc}"},
+    "expect": {"contains": "Line two 42", "not_contains": "123-45-6789"},
+    "note": "read back: the line is kept, the redacted number is gone"
+  },
+  {
+    "tool": "text_find",
+    "args": {"doc": "{step5.doc}", "query": "line two"},
+    "expect": {"json": {"count": 1}},
+    "note": "search finds the line once"
+  },
+  {
+    "tool": "page_render",
+    "args": {"doc": "{step5.doc}", "page": 1},
+    "expect": {"image": true},
+    "note": "the page renders as an image"
+  }
+]

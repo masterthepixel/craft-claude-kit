@@ -1,0 +1,50 @@
+[
+  {
+    "tool": "doc_new",
+    "args": {"width": 64, "height": 48, "name": "smoke"},
+    "expect": {"isError": false, "json": {"document": 0}},
+    "note": "new 64x48 white document; its Background is a pixel layer"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "select.rect", "params": {"x": 0, "y": 0, "width": 32, "height": 48}},
+    "expect": {"isError": false},
+    "note": "select the left half"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "edit.fill", "params": {"contents": "color", "color": "#ff0000"}},
+    "expect": {"isError": false},
+    "note": "fill the selection red"
+  },
+  {
+    "tool": "doc_save",
+    "args": {"path": "{root}/_doctor/smoke.png"},
+    "expect": {"isError": false, "json": {"path": {"$regex": "_doctor/smoke\\.png$"}}},
+    "note": "explicit path inside _doctor (doctor.sh creates and removes that folder)"
+  },
+  {
+    "tool": "doc_open",
+    "args": {"path": "{root}/_doctor/smoke.png"},
+    "expect": {"isError": false, "json": {"width": 64, "height": 48}},
+    "note": "read the saved file back"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "document.pixel", "params": {"x": 5, "y": 5}},
+    "expect": {"isError": false, "json": {"0": 1.0, "1": 0.0, "2": 0.0}},
+    "note": "left half is red after the round trip (RGBA, 0..1)"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "document.pixel", "params": {"x": 40, "y": 5}},
+    "expect": {"isError": false, "json": {"0": 1.0, "1": 1.0, "2": 1.0}},
+    "note": "right half is still white"
+  },
+  {
+    "tool": "render_preview",
+    "args": {"max_side": 256},
+    "expect": {"isError": false, "image": true},
+    "note": "the preview renders to a PNG"
+  }
+]

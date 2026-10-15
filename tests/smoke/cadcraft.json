@@ -1,0 +1,50 @@
+[
+  {
+    "tool": "new_drawing",
+    "args": {},
+    "expect": {"isError": false, "json": {"index": {"$gte": 1}}},
+    "note": "an untitled drawing becomes the current one"
+  },
+  {
+    "tool": "command_line",
+    "args": {"text": "circle 5,2.5 1"},
+    "expect": {"isError": false, "not_contains": "\"error\""},
+    "note": "a command line entry; a refused one comes back in an error field"
+  },
+  {
+    "tool": "execute",
+    "args": {"command": "text", "params": {"at": [1, 2], "text": "smoke doctor", "height": 0.5}},
+    "expect": {"isError": false, "json": {"handle": {"$exists": true}}},
+    "note": "a text entity through the JSON command path"
+  },
+  {
+    "tool": "inspect_drawing",
+    "args": {},
+    "expect": {"isError": false, "json": {"counts.Circle": 1, "counts.Text": 1, "dirty": true}},
+    "note": "the drawing holds exactly what was just drawn"
+  },
+  {
+    "tool": "save",
+    "args": {"path": "{root}/_doctor/smoke.dxf"},
+    "expect": {"isError": false, "json": {"path": {"$regex": "_doctor/smoke\\.dxf$"}, "bytes": {"$gt": 0}}},
+    "note": "explicit absolute path inside the fence"
+  },
+  {
+    "tool": "open",
+    "args": {"path": "{root}/_doctor/smoke.dxf"},
+    "expect": {"isError": false, "json": {"entities": 2}},
+    "note": "read the saved file back: circle and text"
+  },
+  {
+    "tool": "find_text",
+    "args": {"contains": "smoke doctor"},
+    "expect": {"isError": false, "json": {"count": 1}, "contains": "smoke doctor"},
+    "note": "the text survived the round trip"
+  },
+  {
+    "tool": "render",
+    "args": {"path": "{root}/_doctor/smoke.png"},
+    "expect": {"isError": false},
+    "note": "render writes a PNG to an explicit path"
+  }
+]

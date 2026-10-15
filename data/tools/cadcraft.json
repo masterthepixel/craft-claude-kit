@@ -1,0 +1,126 @@
+{
+  "server": {
+    "name": "cadcraft",
+    "version": "0.7.0"
+  },
+  "instructions": "CADCraft is a 2D/3D CAD drafting app (an AutoCAD clone). Coordinates are drawing units, y up. Fastest path: command_line with AutoCAD syntax, e.g. `line 0,0 10,0 10,5 c`, `circle 5,2.5 1`, `rectang 0,0 4,3`, `offset 1` then pick, `zoom e`. Or execute with JSON (list_commands shows ids and params). Verify with inspect_drawing / query_entities and look with render. Backend: headless CADCraft session.",
+  "tools": [
+    {
+      "name": "cancel",
+      "description": "Press Escape: cancel the running command (or clear the selection).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "command_line",
+      "description": "Type one line at the CADCraft command line, exactly as a user would at an AutoCAD-style prompt. Starts commands by name or alias (LINE, L, CIRCLE, C, PLINE, RECTANG, MOVE, TRIM, OFFSET, ZOOM…) and answers the active prompt: points `x,y`, relative `@dx,dy`, polar `@dist<angle`, distances, keywords (e.g. `c` for Close), empty text = Enter. Spaces act as Enter, so `circle 0,0 5` works in one call. Returns the new prompt and command-line output, and `error` when the line was refused.",
+      "params": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    },
+    {
+      "name": "execute",
+      "description": "Run any command with JSON parameters (no prompts or dialogs). Use list_commands to find ids and parameter docs. Examples: line {points:[[0,0],[10,0]]}, circle {center:[0,0], radius:5}, layer.new {name:\"Walls\", color:\"red\", current:true}, move {handles:[\"10A\"], delta:[5,0]}, zoom {mode:\"extents\"}.",
+      "params": [
+        "command",
+        "params"
+      ],
+      "required": [
+        "command"
+      ]
+    },
+    {
+      "name": "find_text",
+      "description": "Read the drawing's texts: TEXT, MTEXT (formatting removed), block attributes and multileaders, each with its text, insertion point `at`, height, rotation, style, layer and handle. Filter by `contains` (any case), `layer` and/or `window` [[x0,y0],[x1,y1]] around the insertion points; page with offset and limit (default 200). Use it to find room names, sheet titles and notes without reading all the geometry.",
+      "params": [
+        "contains",
+        "layer",
+        "limit",
+        "offset",
+        "window"
+      ],
+      "required": []
+    },
+    {
+      "name": "inspect_drawing",
+      "description": "Summary of the active drawing: entity counts, extents, layers, styles, blocks, layouts, selection, undo history and (optionally) entities with handles and geometry.",
+      "params": [
+        "entities",
+        "limit"
+      ],
+      "required": []
+    },
+    {
+      "name": "list_commands",
+      "description": "List commands with ids, labels, menu paths, aliases and parameter docs. Optional filter: a substring of the command id, label or an alias.",
+      "params": [
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "new_drawing",
+      "description": "Create a new drawing (imperial by default, or metric).",
+      "params": [
+        "metric"
+      ],
+      "required": []
+    },
+    {
+      "name": "open",
+      "description": "Open a DXF file.",
+      "params": [
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "query_entities",
+      "description": "Entities filtered by type (Line, Circle, Polyline…), layer and/or a window [[x0,y0],[x1,y1]] (objects whose geometry is inside or crosses it; crossing:false = entirely inside). Returns count (all matches), returned (this page) and entities; page with offset and limit (default 500).",
+      "params": [
+        "crossing",
+        "layer",
+        "limit",
+        "offset",
+        "type",
+        "window"
+      ],
+      "required": []
+    },
+    {
+      "name": "render",
+      "description": "Render the active drawing to a PNG and return it as an image: fitted to the extents by default, or just the area `window` [[x0,y0],[x1,y1]] (drawing units), e.g. one sheet or one room of a large drawing. With a window and no size the image is 1600 px wide with the window's shape.",
+      "params": [
+        "fit",
+        "height",
+        "path",
+        "width",
+        "window"
+      ],
+      "required": []
+    },
+    {
+      "name": "save",
+      "description": "Save the drawing (DXF or DWG by extension). A .svg, .png or .pdf path exports instead: the drawing keeps its name and unsaved changes.",
+      "params": [
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "script",
+      "description": "Run a multi-line script (like an AutoCAD .scr file): one or more inputs per line, blank line = Enter.",
+      "params": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    }
+  ]
+}

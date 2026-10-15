@@ -1,0 +1,296 @@
+{
+  "server": {
+    "name": "deckcraft",
+    "version": "0.7.0"
+  },
+  "instructions": "DeckCraft is a presentation app (a PowerPoint clone). Coordinates are points on the current slide (y down; the default 16:9 slide is 960×540). Every action is a command: find ids and parameters with list_commands and run them with run_command (or several with batch). Typical flow: new_presentation → add_slide {layout:\"titleAndContent\", title, body} → add_shape / add_text_box / insert_picture / insert_chart → inspect_slide to read back ids, boxes and text → render_slide to look at the result. Shapes are selected with run_command edit.select {ids:[…]}; formatting commands (format.*, shape.fill, shape.line…) act on the selection or on `ids`. Save with save_presentation (.deckcraft or .pptx). Backend: headless (in-process engine; no window). Community: https://discord.gg/artcraft (Discord), https://getartcraft.com/apps/deckcraft (app page), https://github.com/storytold/deckcraft (source). The `app.links` command returns these links.",
+  "tools": [
+    {
+      "name": "add_shape",
+      "description": "Insert a preset shape (rect, roundRect, ellipse, triangle, diamond, rightArrow, chevron, star5, heart, cloud, wedgeRectCallout, line, straightConnector1… see shape.presets) at x,y with size w×h, with optional text and fill colour (#RRGGBB or accent1..6).",
+      "params": [
+        "fill",
+        "h",
+        "line",
+        "preset",
+        "text",
+        "w",
+        "x",
+        "y"
+      ],
+      "required": [
+        "preset",
+        "x",
+        "y",
+        "w",
+        "h"
+      ]
+    },
+    {
+      "name": "add_slide",
+      "description": "Insert a slide after the current one with a layout (title, titleAndContent, sectionHeader, twoContent, comparison, titleOnly, blank, contentWithCaption, pictureWithCaption) and optional title/body text (body: one paragraph per line, leading tabs indent).",
+      "params": [
+        "body",
+        "layout",
+        "title"
+      ],
+      "required": []
+    },
+    {
+      "name": "add_text_box",
+      "description": "Insert a text box. Height grows to fit the text.",
+      "params": [
+        "align",
+        "color",
+        "h",
+        "size",
+        "text",
+        "w",
+        "x",
+        "y"
+      ],
+      "required": [
+        "x",
+        "y",
+        "w",
+        "text"
+      ]
+    },
+    {
+      "name": "batch",
+      "description": "Run commands in order; stops at the first error unless keepGoing. Returns each result.",
+      "params": [
+        "commands",
+        "keepGoing"
+      ],
+      "required": [
+        "commands"
+      ]
+    },
+    {
+      "name": "call_app",
+      "description": "Call any control-channel method (ui.click, ui.set, ui.dialog.*, ui.inspect…). Desktop app only (`deckcraft-cli mcp --connect PORT`).",
+      "params": [
+        "method",
+        "params"
+      ],
+      "required": [
+        "method"
+      ]
+    },
+    {
+      "name": "export",
+      "description": "Export slides: png/jpeg (one slide, or all with all:true), pptx, deckcraft, outline text, or pdf (slides, notes pages or handouts).",
+      "params": [
+        "all",
+        "dpi",
+        "format",
+        "frame",
+        "includeHidden",
+        "layout",
+        "path",
+        "perPage",
+        "scale",
+        "slide",
+        "slides",
+        "textLayer"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "go_to_slide",
+      "description": "Make a slide current (shape commands act on the current slide).",
+      "params": [
+        "index"
+      ],
+      "required": [
+        "index"
+      ]
+    },
+    {
+      "name": "insert_chart",
+      "description": "Insert a chart (column, bar, line, pie, doughnut, area, scatter, stackedColumn…) with categories and series.",
+      "params": [
+        "categories",
+        "series",
+        "title",
+        "type"
+      ],
+      "required": []
+    },
+    {
+      "name": "insert_picture",
+      "description": "Insert a picture from a file path or base64 data, optionally at a box.",
+      "params": [
+        "data",
+        "h",
+        "name",
+        "path",
+        "w",
+        "x",
+        "y"
+      ],
+      "required": []
+    },
+    {
+      "name": "insert_table",
+      "description": "Insert a table with rows×cols and optional cell text (data: rows of strings).",
+      "params": [
+        "cols",
+        "data",
+        "h",
+        "rows",
+        "w",
+        "x",
+        "y"
+      ],
+      "required": [
+        "rows",
+        "cols"
+      ]
+    },
+    {
+      "name": "inspect_document",
+      "description": "Slides (index, id, title, layout, shape count, transition, animations, notes), sections, theme, layouts, media and the selection.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "inspect_slide",
+      "description": "One slide's shapes with ids, kinds, boxes [x,y,w,h], placeholder types, text, fills, tables, charts; plus background, transition, animations, notes.",
+      "params": [
+        "index"
+      ],
+      "required": []
+    },
+    {
+      "name": "key",
+      "description": "Press a key as on the keyboard: text editing keys (arrows, Backspace, Enter, Tab), nudges, and shortcuts (cmd+B…).",
+      "params": [
+        "key",
+        "mods"
+      ],
+      "required": [
+        "key"
+      ]
+    },
+    {
+      "name": "list_commands",
+      "description": "Every command (id, label, ribbon/menu place, shortcut, parameter summary, whether it is enabled now). Filter by a substring of id or label.",
+      "params": [
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "new_presentation",
+      "description": "Start a new presentation (one title slide). Optional theme: DeckCraft, Harbor, Ember, Meadow, Nocturne, Paper, Coral Reef, Slate.",
+      "params": [
+        "blank",
+        "theme"
+      ],
+      "required": []
+    },
+    {
+      "name": "open_presentation",
+      "description": "Open a .deckcraft or .pptx file by path.",
+      "params": [
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "pointer",
+      "description": "Drive the active tool with pointer events in slide points: down/drag/up/move/doubleclick, exactly like the mouse (draws, moves, resizes, rotates, places the caret).",
+      "params": [
+        "events",
+        "mods"
+      ],
+      "required": [
+        "events"
+      ]
+    },
+    {
+      "name": "render_slide",
+      "description": "Render a slide to a PNG image and return it, to check your work visually.",
+      "params": [
+        "edit",
+        "scale",
+        "slide"
+      ],
+      "required": []
+    },
+    {
+      "name": "run_command",
+      "description": "Run any command by id with JSON parameters. This is how everything is done: slide.new, shape.insert, text.set, format.bold, shape.fill, design.theme, transition.set, animation.add, table.merge, edit.undo…",
+      "params": [
+        "command",
+        "params"
+      ],
+      "required": [
+        "command"
+      ]
+    },
+    {
+      "name": "save_presentation",
+      "description": "Save the active presentation (.deckcraft or .pptx by extension).",
+      "params": [
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "screenshot",
+      "description": "Screenshot of the whole DeckCraft window (UI included). Desktop app only (`deckcraft-cli mcp --connect PORT`).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "select",
+      "description": "Select shapes by id (formatting commands then act on them).",
+      "params": [
+        "ids"
+      ],
+      "required": [
+        "ids"
+      ]
+    },
+    {
+      "name": "select_tool",
+      "description": "Pick the pointer tool: select, textBox, shape (with preset), pen, highlighter, eraser — or a preset name.",
+      "params": [
+        "preset",
+        "tool"
+      ],
+      "required": [
+        "tool"
+      ]
+    },
+    {
+      "name": "set_text",
+      "description": "Replace a shape's text (keeps its first run's formatting). Leading tabs set bullet levels.",
+      "params": [
+        "id",
+        "text"
+      ],
+      "required": [
+        "id",
+        "text"
+      ]
+    },
+    {
+      "name": "type_text",
+      "description": "Type text into the text being edited (or into the selected shape).",
+      "params": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    }
+  ]
+}

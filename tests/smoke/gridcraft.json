@@ -1,0 +1,50 @@
+[
+  {
+    "note": "a fresh blank workbook is created",
+    "tool": "new_workbook",
+    "args": {},
+    "expect": {"json": {"title": {"$regex": "^Book[0-9]+$"}}}
+  },
+  {
+    "note": "write a small table (null is an empty cell)",
+    "tool": "write_range",
+    "args": {"range": "A1", "values": [["Item", "Cost"], ["Rent", 1200], ["Food", 450], ["Total", null]]},
+    "expect": {"json": {"cells": 8}}
+  },
+  {
+    "note": "a formula is computed",
+    "tool": "set_cell",
+    "args": {"cell": "B4", "input": "=SUM(B2:B3)"},
+    "expect": {"json": {"value": "1650"}}
+  },
+  {
+    "note": "computed values read back",
+    "tool": "read_range",
+    "args": {"range": "A1:B4"},
+    "expect": {"json": {"values[3][1]": 1650, "values[0][0]": "Item"}}
+  },
+  {
+    "note": "saved to an explicit path inside the gridcraft folder",
+    "tool": "save_workbook",
+    "args": {"path": "{root}/_doctor/smoke-gridcraft.xlsx"},
+    "expect": {"json": {"bytes": {"$gt": 0}, "path": {"$contains": "_doctor/smoke-gridcraft.xlsx"}}}
+  },
+  {
+    "note": "close it so the next open reads the file from disk",
+    "tool": "execute_command",
+    "args": {"command": "file.close", "params": {}},
+    "expect": {"json": {"closed": true}}
+  },
+  {
+    "note": "reopened from disk, not already in memory",
+    "tool": "open_workbook",
+    "args": {"path": "{root}/_doctor/smoke-gridcraft.xlsx"},
+    "expect": {"json": {"title": "smoke-gridcraft.xlsx", "alreadyOpen": {"$exists": false}}}
+  },
+  {
+    "note": "the formula survived the round trip",
+    "tool": "read_range",
+    "args": {"range": "A1:B4", "formulas": true},
+    "expect": {"json": {"values[3][1]": "=SUM(B2:B3)", "values[1][1]": 1200}}
+  }
+]

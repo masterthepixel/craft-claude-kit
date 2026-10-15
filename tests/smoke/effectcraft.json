@@ -1,0 +1,50 @@
+[
+  {
+    "tool": "command_run",
+    "args": {"id": "comp.new", "params": {"name": "Smoke", "width": 320, "height": 180, "frameRate": 10, "duration": 2}},
+    "expect": {"isError": false, "json": {"comp": {"$exists": true}}},
+    "note": "new 2 s composition; the result is {comp: id}"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "layer.newText", "params": {"text": "Smoke", "size": 40, "fill": "#ffffff", "name": "Title"}},
+    "expect": {"isError": false, "json": {"layer": {"$exists": true}}},
+    "note": "text layer; the result is {layer: id}"
+  },
+  {
+    "tool": "add_effect",
+    "args": {"layer": "Title", "effect": "ec.blur.gaussian", "values": {"blurriness": 4}},
+    "expect": {"isError": false, "json": {"path": "effects/#1", "params[0].value": 4}},
+    "note": "effect applied with its first parameter set"
+  },
+  {
+    "tool": "set_property",
+    "args": {"layer": "Title", "path": "transform/opacity", "value": 50},
+    "expect": {"isError": false, "json": {"value": 50}},
+    "note": "static property, no time given"
+  },
+  {
+    "tool": "save_project",
+    "args": {"path": "{root}/_doctor/smoke.ecproj"},
+    "expect": {"isError": false, "json": {"dirty": false, "path": {"$regex": "_doctor/smoke\\.ecproj$"}}},
+    "note": "Save As with an explicit path inside the write root"
+  },
+  {
+    "tool": "open_project",
+    "args": {"path": "{root}/_doctor/smoke.ecproj"},
+    "expect": {"isError": false, "json": {"dirty": false, "items[0].name": "Smoke", "items[0].layers": 1}},
+    "note": "read the saved project back"
+  },
+  {
+    "tool": "get_property",
+    "args": {"layer": "Title", "path": "effects/#1/blurriness", "time": 0},
+    "expect": {"isError": false, "json": {"value": 4}},
+    "note": "the effect and its value survived the round trip"
+  },
+  {
+    "tool": "render_frame",
+    "args": {"time": 0, "max_side": 160, "path": "{root}/_doctor/smoke.png", "inline": false},
+    "expect": {"isError": false, "json": {"width": 160, "path": {"$regex": "_doctor/smoke\\.png$"}}},
+    "note": "frame written to a PNG inside _doctor"
+  }
+]

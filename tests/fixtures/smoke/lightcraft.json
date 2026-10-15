@@ -1,0 +1,4 @@
+[
+  {"tool": "info", "args": {}, "expect": {"isError": false, "json": {"app": "lightcraft"}}, "note": "fixture: a real call answered"},
+  {"tool": "echo", "args": {"text": "{root}"}, "expect": {"contains": "/lightcraft"}, "note": "fixture: second step"}
+]

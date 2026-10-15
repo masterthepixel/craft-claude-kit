@@ -1,0 +1,50 @@
+[
+  {
+    "tool": "new_session",
+    "args": {"name": "smoke", "template": "blank"},
+    "expect": {"isError": false, "json": {"name": "smoke"}},
+    "note": "blank session"
+  },
+  {
+    "tool": "execute",
+    "args": {"command": "track.new", "params": {"kind": "instrument", "name": "Smoke synth"}},
+    "expect": {"isError": false, "json": {"tracks[0]": {"$gt": 0}}},
+    "note": "instrument track, so the smoke test needs no input file"
+  },
+  {
+    "tool": "execute",
+    "args": {"command": "midi.new_clip", "params": {"track": "Smoke synth", "start": 0, "length": 96000}},
+    "expect": {"isError": false, "json": {"clip": {"$gt": 0}, "end": 96000}},
+    "note": "two-second MIDI clip on that track"
+  },
+  {
+    "tool": "execute",
+    "args": {"command": "midi.note_add", "params": {"clip": "{step3.clip}", "pitch": 69, "start_ticks": 0, "length_ticks": 1920, "velocity": 100}},
+    "expect": {"isError": false, "json": {"notes": 1}},
+    "note": "one A4 note"
+  },
+  {
+    "tool": "bounce_mix",
+    "args": {"path": "{root}/_doctor/smoke.wav", "format": "wav"},
+    "expect": {"isError": false, "json": {"peak_db": {"$gt": -60}, "seconds": 2.0, "path": {"$regex": "_doctor/smoke\\.wav$"}}},
+    "note": "the render has sound (silence reads -144 dBFS)"
+  },
+  {
+    "tool": "save_session",
+    "args": {"path": "{root}/_doctor/smoke.scraft"},
+    "expect": {"isError": false, "json": {"path": {"$regex": "_doctor/smoke\\.scraft$"}}},
+    "note": "explicit path inside _doctor (doctor.sh removes the folder afterwards)"
+  },
+  {
+    "tool": "open_session",
+    "args": {"path": "{root}/_doctor/smoke.scraft"},
+    "expect": {"isError": false, "json": {"missing": [], "name": "smoke", "tracks": 1}},
+    "note": "read the saved session back; nothing missing"
+  },
+  {
+    "tool": "inspect_session",
+    "args": {},
+    "expect": {"isError": false, "json": {"tracks[0].name": "Smoke synth", "tracks[0].kind": "instrument", "tracks[0].clips[0].length": 96000}},
+    "note": "content survived the round trip"
+  }
+]

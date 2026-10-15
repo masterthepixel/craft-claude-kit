@@ -1,0 +1,187 @@
+{
+  "server": {
+    "name": "soundcraft",
+    "version": "0.7.0"
+  },
+  "instructions": "SoundCraft is a digital audio workstation (Pro Tools-class). Everything a user can do is a command: call `list_commands` to discover ids and their params, then `execute` (or `batch`). Positions are samples (integers), `{\"seconds\": x}`, or time strings like \"bars_beats:5|1|000\" / \"0:12.500\". Tracks are referenced by id or name. Verify your work with `inspect_session` (tracks, clips, mixer, automation, markers, selection). Programmatic calls never open dialogs. Tools marked APP_ONLY need the desktop app (`soundcraft --control 0` + `soundcraft-cli mcp --connect PORT`).\nBackend: headless engine, session `Untitled`.",
+  "tools": [
+    {
+      "name": "batch",
+      "description": "Run several commands in order; stops at the first error unless keep_going.",
+      "params": [
+        "calls",
+        "keep_going"
+      ],
+      "required": [
+        "calls"
+      ]
+    },
+    {
+      "name": "bounce_mix",
+      "description": "Render the mix to an audio file. Returns peak dBFS and integrated LUFS.",
+      "params": [
+        "bit_depth",
+        "end",
+        "format",
+        "normalize",
+        "path",
+        "start"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "click",
+      "description": "APP_ONLY. Click at window coordinates (points).",
+      "params": [
+        "button",
+        "count",
+        "x",
+        "y"
+      ],
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "name": "drag",
+      "description": "APP_ONLY. Drag with the primary button.",
+      "params": [
+        "to_x",
+        "to_y",
+        "x",
+        "y"
+      ],
+      "required": [
+        "x",
+        "y",
+        "to_x",
+        "to_y"
+      ]
+    },
+    {
+      "name": "execute",
+      "description": "Run one command by id with JSON params. Returns the command's result.",
+      "params": [
+        "command",
+        "params"
+      ],
+      "required": [
+        "command"
+      ]
+    },
+    {
+      "name": "import_audio",
+      "description": "Import an audio file (WAV, AIFF, FLAC, MP3, OGG, AAC/M4A, ALAC, CAF) onto a new or existing track.",
+      "params": [
+        "at",
+        "path",
+        "track"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "inspect_session",
+      "description": "The whole session as JSON: tracks (clips, inserts, sends, automation), busses, markers, groups, selection, transport.",
+      "params": [
+        "detail"
+      ],
+      "required": []
+    },
+    {
+      "name": "key",
+      "description": "APP_ONLY. Press a key with modifiers.",
+      "params": [
+        "alt",
+        "cmd",
+        "ctrl",
+        "key",
+        "shift"
+      ],
+      "required": [
+        "key"
+      ]
+    },
+    {
+      "name": "list_commands",
+      "description": "List SoundCraft commands (id, label, menu path, shortcut, params doc, enabled).",
+      "params": [
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "menu_invoke",
+      "description": "APP_ONLY. Invoke a menu item like a click (may open its dialog), e.g. \"Track > New...\".",
+      "params": [
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "new_session",
+      "description": "Start a new session (optionally the built-in demo).",
+      "params": [
+        "name",
+        "sample_rate",
+        "template"
+      ],
+      "required": []
+    },
+    {
+      "name": "open_session",
+      "description": "Open a .scraft session file.",
+      "params": [
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "parity",
+      "description": "Feature-parity report against the incumbent's menu catalog.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "save_session",
+      "description": "Save the session (path required the first time; replace: true to save over another existing file).",
+      "params": [
+        "path",
+        "replace"
+      ],
+      "required": []
+    },
+    {
+      "name": "screenshot",
+      "description": "APP_ONLY. Screenshot the app window (PNG).",
+      "params": [
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "ui_inspect",
+      "description": "APP_ONLY. UI state: front window, panels, layout rectangles of tracks, dialogs.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "ui_set",
+      "description": "APP_ONLY. Set UI state fields, e.g. {\"window\": \"Mix\"}.",
+      "params": [
+        "state"
+      ],
+      "required": [
+        "state"
+      ]
+    }
+  ]
+}

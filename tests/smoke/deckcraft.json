@@ -1,0 +1,50 @@
+[
+  {
+    "tool": "new_presentation",
+    "args": {"theme": "Harbor"},
+    "expect": {"isError": false, "json": {"document": 0}},
+    "note": "a fresh deck in the probe session"
+  },
+  {
+    "tool": "add_slide",
+    "args": {"layout": "titleAndContent", "title": "Doctor smoke", "body": "Line one\nLine two"},
+    "expect": {"isError": false, "json": {"index": 1}},
+    "note": "second slide, becomes current"
+  },
+  {
+    "tool": "add_shape",
+    "args": {"preset": "roundRect", "x": 40, "y": 120, "w": 200, "h": 80, "fill": "accent1", "text": "Box"},
+    "expect": {"isError": false, "json": {"id": {"$gt": 0}}},
+    "note": "a shape on the current slide"
+  },
+  {
+    "tool": "save_presentation",
+    "args": {"path": "{root}/_doctor/smoke.pptx"},
+    "expect": {"isError": false, "json": {"path": "{root}/_doctor/smoke.pptx", "bytes": {"$gt": 0}}},
+    "note": "explicit path under _doctor"
+  },
+  {
+    "tool": "open_presentation",
+    "args": {"path": "{root}/_doctor/smoke.pptx"},
+    "expect": {"isError": false, "json": {"slides": 2}},
+    "note": "read the saved file back"
+  },
+  {
+    "tool": "inspect_slide",
+    "args": {"index": 1},
+    "expect": {"isError": false, "json": {"title": "Doctor smoke", "layout": "Title and Content"}, "contains": "Box"},
+    "note": "content of the saved slide"
+  },
+  {
+    "tool": "export",
+    "args": {"path": "{root}/_doctor/smoke.png", "slide": 1},
+    "expect": {"isError": false, "json": {"files[0]": "{root}/_doctor/smoke.png"}},
+    "note": "PNG of one slide"
+  },
+  {
+    "tool": "render_slide",
+    "args": {"slide": 1},
+    "expect": {"isError": false, "image": true},
+    "note": "rendered PNG comes back as an image"
+  }
+]

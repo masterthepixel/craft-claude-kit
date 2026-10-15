@@ -1,0 +1,292 @@
+{
+  "server": {
+    "name": "effectcraft",
+    "version": "0.10.0"
+  },
+  "instructions": "EffectCraft is an After Effects-class motion graphics compositor. Everything is an engine command: command_list discovers ids and params, command_run {id, params} runs them (undoable; command_batch runs several in order). Typical flow: command_run comp.new -> command_run layer.newText / layer.newSolid (returns the layer id) -> set_property / add_keyframe -> command_run effect.apply -> render_preview to look at the result. Inspect with doc_inspect, get_project, get_comp and get_layer (every property node carries its `path`, e.g. `transform/position`, `effects/#1/blurriness`). Times are seconds. In bridge mode (app started with `--control <port>`) screenshot and the ui_* tools show and operate the live window.",
+  "tools": [
+    {
+      "name": "add_effect",
+      "description": "Apply an effect to a layer and optionally set its parameters in one undoable call. `effect` is an id (`ec.blur.gaussian`) or After Effects name (`Gaussian Blur`; see list_effects); `values` maps parameter ids to values, e.g. {\"blurriness\": 12}. One undo step; if a value fails, nothing is applied. Returns the instance `path` (`effects/#n`, for set_property / add_keyframe) and its parameters with their paths and current values.",
+      "params": [
+        "comp",
+        "effect",
+        "layer",
+        "values"
+      ],
+      "required": [
+        "layer",
+        "effect"
+      ]
+    },
+    {
+      "name": "add_keyframe",
+      "description": "Add keyframes to a property (turns the stopwatch on): one with `time` (+ optional `value`, default the current value) or many with `keys: [{time, value}]`, then optionally set their `interpolation`: linear, bezier, hold, easyEase, easyEaseIn, easyEaseOut. Example: {\"layer\":1,\"path\":\"transform/position\",\"keys\":[{\"time\":0,\"value\":[0,540]},{\"time\":2,\"value\":[1920,540]}],\"interpolation\":\"easyEase\"}.",
+      "params": [
+        "comp",
+        "interpolation",
+        "keys",
+        "layer",
+        "path",
+        "time",
+        "timeBase",
+        "value"
+      ],
+      "required": [
+        "layer",
+        "path"
+      ]
+    },
+    {
+      "name": "batch",
+      "description": "Run several engine commands in one call as ONE undo step (engine.batch). Later steps can use earlier results: a string param \"$N\" or \"$N.key\" is step N's result (1-based), e.g. create a layer, then key and style it: {\"steps\":[{\"command\":\"layer.newText\",\"params\":{\"text\":\"Hi\",\"name\":\"Title\"}},{\"command\":\"prop.addKey\",\"params\":{\"layer\":\"$1.layer\",\"path\":\"transform/opacity\",\"time\":0,\"value\":0}},{\"command\":\"effect.apply\",\"params\":{\"layer\":\"$1.layer\",\"effect\":\"Glow\"}}]}. Returns {steps, results}. If a step fails the whole batch is rolled back (unless atomic: false) and the error names the step.",
+      "params": [
+        "atomic",
+        "label",
+        "steps"
+      ],
+      "required": [
+        "steps"
+      ]
+    },
+    {
+      "name": "command_batch",
+      "description": "Run commands in order, returning each result or error. Stop at the first error by default; stop_on_error: false continues. Each edit has its own undo step; use batch for an atomic undo group.",
+      "params": [
+        "steps",
+        "stop_on_error"
+      ],
+      "required": [
+        "steps"
+      ]
+    },
+    {
+      "name": "command_list",
+      "description": "List engine commands: id, label, menu path, shortcut, `params` doc (e.g. `{name?, width?, height?, frameRate?, duration? (s)}`) and whether it can run now (`why` if not). Every menu item, shortcut and panel gesture maps to one of these ids; run them with execute_command. Narrow with `filter` (e.g. `layer.new`, `keys`, `effect`).",
+      "params": [
+        "enabled_only",
+        "filter",
+        "schemas"
+      ],
+      "required": []
+    },
+    {
+      "name": "command_run",
+      "description": "Run any engine command by id with JSON params; edits are undoable. Examples: comp.new {\"name\":\"Main\",\"width\":1920,\"height\":1080,\"frameRate\":30,\"duration\":5}; layer.newText {\"text\":\"Hello\",\"size\":120,\"fill\":\"#ffffff\"} (returns {\"layer\":id}); layer.newSolid {\"color\":\"#3366ff\"}; layer.newShape; effect.apply {\"layer\":3,\"effect\":\"Gaussian Blur\"}; time.set {\"time\":2.5}; layer.select {\"layers\":[3]}. Layers are referenced by id, \"#n\" or name; times are seconds.",
+      "params": [
+        "id",
+        "params"
+      ],
+      "required": [
+        "id"
+      ]
+    },
+    {
+      "name": "describe_command",
+      "description": "One command in full: id, label, menu path, shortcut, the `params` doc, a JSON Schema of its parameters (`schema`: properties, required, additionalProperties) and whether it can run now (`why` if not). Use before execute_command when unsure of the parameters; execute_command rejects unknown keys.",
+      "params": [
+        "command",
+        "id"
+      ],
+      "required": []
+    },
+    {
+      "name": "doc_inspect",
+      "description": "Inspect the project overview and active composition (null when no composition is active).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "execute_command",
+      "description": "Run any engine command by id with JSON params; edits are undoable. Examples: comp.new {\"name\":\"Main\",\"width\":1920,\"height\":1080,\"frameRate\":30,\"duration\":5}; layer.newText {\"text\":\"Hello\",\"size\":120,\"fill\":\"#ffffff\"} (returns {\"layer\":id}); layer.newSolid {\"color\":\"#3366ff\"}; layer.newShape; effect.apply {\"layer\":3,\"effect\":\"Gaussian Blur\"}; time.set {\"time\":2.5}; layer.select {\"layers\":[3]}. Layers are referenced by id, \"#n\" or name; times are seconds.",
+      "params": [
+        "command",
+        "id",
+        "params"
+      ],
+      "required": []
+    },
+    {
+      "name": "get_comp",
+      "description": "A composition: id, name, size, frame rate, duration, work area, background and its layers top to bottom (id, index, name, type, in/out/start seconds, blend mode, parent, track matte, switches). Layer ids feed get_layer, get_property/set_property and commands.",
+      "params": [
+        "comp"
+      ],
+      "required": []
+    },
+    {
+      "name": "get_layer",
+      "description": "A layer's property tree (transform, masks, effects, text, shape contents, ...): leaf properties have a `path` usable with get_property/set_property/add_keyframe, plus uid, match id, name, type, value at `time`, keyframes and expression. Groups contain children; inspect them here, then select a leaf path. `flat: true` returns just a list of {path, type, value, keys, expression} (compact).",
+      "params": [
+        "comp",
+        "depth",
+        "flat",
+        "layer",
+        "time"
+      ],
+      "required": [
+        "layer"
+      ]
+    },
+    {
+      "name": "get_project",
+      "description": "Project overview: file path, dirty flag, bit depth, every item (id, name, type Composition/Footage/Solid/Folder, size, duration, layer count), the active comp id, current time (s), selected layers and the undo stack.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "get_property",
+      "description": "Read one property: type, value at `time` (comp seconds; default the current time), whether it is animated, its keyframes (time, value, in/out interpolation) and expression.",
+      "params": [
+        "comp",
+        "layer",
+        "path",
+        "time"
+      ],
+      "required": [
+        "layer",
+        "path"
+      ]
+    },
+    {
+      "name": "get_state",
+      "description": "Where things stand: the editor state (active comp, current time, selected layers/keys/items, open comps, tool, work area) plus what this build can do (`app`: version, command and effect counts, GPU effects, import/export formats, After Effects parity summary). Cheap; call it to re-orient after a series of edits.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "history",
+      "description": "The branching undo history (History panel): without arguments lists every state {index, id, label, parent, depth (0 = working line, >0 = branch), current, future}; undoing and then editing keeps the undone states as a branch. With `goto` (an index or id from the listing) jumps to that state, on any branch, without losing the others.",
+      "params": [
+        "goto"
+      ],
+      "required": []
+    },
+    {
+      "name": "list_commands",
+      "description": "List engine commands: id, label, menu path, shortcut, `params` doc (e.g. `{name?, width?, height?, frameRate?, duration? (s)}`) and whether it can run now (`why` if not). Every menu item, shortcut and panel gesture maps to one of these ids; run them with execute_command. Narrow with `filter` (e.g. `layer.new`, `keys`, `effect`).",
+      "params": [
+        "enabled_only",
+        "filter",
+        "schemas"
+      ],
+      "required": []
+    },
+    {
+      "name": "list_effects",
+      "description": "The effect registry: id, After Effects name, category, GPU and 32-bpc support. Narrow with `filter` (id, name or category text). Apply with add_effect.",
+      "params": [
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "list_fonts",
+      "description": "The font families text layers can use, bundled and installed on this machine: family, styles, origin (bundled / system / user), whether it is a variable font and the name in the font's own language. Narrow with `query` and `variable`; `rescan` picks up fonts installed since launch. Set one with execute_command `layer.setText {\"layer\", \"font\", \"style\"}`.",
+      "params": [
+        "query",
+        "rescan",
+        "variable"
+      ],
+      "required": []
+    },
+    {
+      "name": "open_project",
+      "description": "Open a project: `path` to an .ecproj file, `demo: true` for the built-in demo project, or `new: true` for an empty project. Returns the project overview.",
+      "params": [
+        "demo",
+        "new",
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "redo",
+      "description": "Redo `steps` undone edits (default 1).",
+      "params": [
+        "steps"
+      ],
+      "required": []
+    },
+    {
+      "name": "render_frame",
+      "description": "Render a composition frame (default: the active comp at the current time) and return it as a PNG image, longest side `max_side` (default 960, 0 = full size). `path` also writes the PNG to disk; `inline: false` returns only the metadata. Use it to check your work.",
+      "params": [
+        "comp",
+        "inline",
+        "max_side",
+        "path",
+        "time",
+        "transparent"
+      ],
+      "required": []
+    },
+    {
+      "name": "render_preview",
+      "description": "Render a composition frame (default: the active comp at the current time) and return it as a PNG image, longest side `max_side` (default 960, 0 = full size). Use it to check your work.",
+      "params": [
+        "comp",
+        "max_side",
+        "time",
+        "transparent"
+      ],
+      "required": []
+    },
+    {
+      "name": "run_script",
+      "description": "Run JavaScript with an After Effects-style scripting object model (app, app.project, items.addComp, comp.layers.addSolid/addText/addShape/addNull/addCamera/addLight, layer.property(\"ADBE Transform Group\").property(\"ADBE Position\").setValueAtTime(t, v), Effects.addProperty(\"ADBE Gaussian Blur 2\"), expressions, markers, renderQueue…). Every edit is an undoable engine command; app.beginUndoGroup/endUndoGroup make one undo step. Returns {ok, result (last expression value), output (writeLn/$.writeln/alert text), error: {message, line, column} | null}. File access is limited to the project folder unless the user allows scripts to write files.",
+      "params": [
+        "code",
+        "name"
+      ],
+      "required": [
+        "code"
+      ]
+    },
+    {
+      "name": "save_project",
+      "description": "Save the project to its current file, or to `path` (Save As, .ecproj).",
+      "params": [
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "script_ui",
+      "description": "Drive ScriptUI windows that scripts opened (dialogs, palettes, dockable panels). action `list` (default): open windows; `get`: a window's control tree (type, name, text, value, checked, items, selection, bounds); `click`: press a button / toggle a checkbox / pick a radio button; `set`: type text, move a slider, pick a list item (index or text); `close`: close a window (`result` for a dialog's show(), default 2 = Cancel). Controls by id, \"#id\", properties.name or text. A dialog's script resumes when the dialog closes.",
+      "params": [
+        "action",
+        "result",
+        "value",
+        "widget",
+        "window"
+      ],
+      "required": []
+    },
+    {
+      "name": "set_property",
+      "description": "Set a property. Without `time`: sets the static value (or a key at the current time if already animated). With `time`: adds/replaces a keyframe there, turning the stopwatch on. `expression` sets an After Effects-style JS expression (\"\" removes it). Returns the property as get_property does. Examples: {\"layer\":3,\"path\":\"transform/opacity\",\"value\":50}; {\"layer\":\"Title\",\"path\":\"transform/position\",\"value\":[200,540],\"time\":0}; {\"layer\":3,\"path\":\"transform/rotation\",\"expression\":\"time*90\"}.",
+      "params": [
+        "comp",
+        "expression",
+        "layer",
+        "path",
+        "time",
+        "timeBase",
+        "value"
+      ],
+      "required": [
+        "layer",
+        "path"
+      ]
+    },
+    {
+      "name": "undo",
+      "description": "Undo the last `steps` edits (default 1). Returns the remaining undo stack.",
+      "params": [
+        "steps"
+      ],
+      "required": []
+    }
+  ]
+}

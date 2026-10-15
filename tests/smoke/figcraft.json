@@ -1,0 +1,44 @@
+[
+  {
+    "note": "a frame is created with a fill",
+    "tool": "create_node",
+    "args": {"type": "frame", "name": "Smoke", "x": 0, "y": 0, "width": 320, "height": 200, "props": {"fill": "#FFFFFF"}},
+    "expect": {"json": {"node.name": "Smoke", "node.type": "FRAME", "node.fills[0].color": "#FFFFFF"}}
+  },
+  {
+    "note": "a text child is placed inside the frame and holds its text",
+    "tool": "create_node",
+    "args": {"type": "text", "name": "Title", "parent": "{step1.id}", "x": 16, "y": 16, "text": "Hello craft", "props": {"fontSize": 24}},
+    "expect": {"json": {"node.characters": "Hello craft", "node.fontSize": 24}}
+  },
+  {
+    "note": "the frame is exported as a PNG to an explicit path in the _doctor folder",
+    "tool": "export",
+    "args": {"ids": ["{step1.id}"], "format": "png", "scale": 1, "path": "{root}/_doctor/smoke-figcraft.png"},
+    "expect": {"json": {"format": "png", "bytes": {"$gt": 0}, "path": {"$contains": "_doctor/smoke-figcraft.png"}}}
+  },
+  {
+    "note": "the document is saved to an explicit .figcraft path",
+    "tool": "save_file",
+    "args": {"path": "{root}/_doctor/smoke-figcraft.figcraft"},
+    "expect": {"json": {"bytes": {"$gt": 0}, "path": {"$contains": "_doctor/smoke-figcraft.figcraft"}}}
+  },
+  {
+    "note": "the saved file is opened again from disk",
+    "tool": "open_file",
+    "args": {"path": "{root}/_doctor/smoke-figcraft.figcraft"},
+    "expect": {"contains": "smoke-figcraft.figcraft"}
+  },
+  {
+    "note": "the text layer read back from the reopened file has the same text and id",
+    "tool": "get_node",
+    "args": {"id": "{step2.id}"},
+    "expect": {"json": {"characters": "Hello craft", "id": "{step2.id}"}}
+  },
+  {
+    "note": "the frame renders to an image",
+    "tool": "screenshot",
+    "args": {"ids": ["{step1.id}"], "maxSize": 320},
+    "expect": {"image": true}
+  }
+]

@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Editors and tools
+.vscode/
+.idea/
+*.swp
+*~
+.claude/settings.local.json
+graphify-out/
+
+# Secrets and local overrides: never commit these
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.local.json
+personal-denylist*
+
+# Test and build output
+/tmp/
+/.tmp/
+*.log
+*.orig
+*.rej
+*.bak-craft-kit-*
+*.dmg
+*.zip
+!tests/fixtures/**/*.zip
+!tests/fixtures/**/*.dmg

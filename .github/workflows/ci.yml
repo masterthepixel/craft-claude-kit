@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Read-only token: nothing here publishes, comments or pushes.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The kit targets macOS (sandbox-exec, hdiutil, ditto), so the full suite runs here.
+  # Tests use local fixtures only: no Craft binaries are downloaded and nothing touches the runner's real home.
+  macos:
+    name: macOS (make test)
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # scan-public.sh reads the whole git history
+          persist-credentials: false
+      - name: Tool versions
+        run: |
+          sw_vers
+          uname -m
+          /bin/bash --version | head -n 1
+          python3 --version
+          jq --version
+          git --version
+      - name: make test
+        # Contributors choose their own commit e-mail, so CI does not check commit author metadata.
+        # Maintainers run the full history scan (make scan) before publishing.
+        run: make test SCAN_ARGS=--no-commit-meta
+
+  # Fast portability check for contributors on other platforms: skill contract and shellcheck only.
+  # The installer itself is macOS-only and is not exercised here.
+  ubuntu:
+    name: Linux (skill lint + shellcheck)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tool versions
+        run: |
+          python3 --version
+          shellcheck --version
+      - name: Lint skills and shellcheck
+        run: make lint-skills shellcheck

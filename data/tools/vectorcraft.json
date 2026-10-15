@@ -1,0 +1,374 @@
+{
+  "server": {
+    "name": "vectorcraft",
+    "version": "0.11.0"
+  },
+  "instructions": "VectorCraft is a professional vector illustration app. Coordinates are points in document space (y down, origin at the first artboard's top-left; a new document is 612×792). Draw with draw_shape / draw_path, change colours with set_paint, look with render_preview and doc_inspect. Every menu action is a command: find it with command_list and run it with command_run (or command_batch for several). New objects become the selection, and most commands act on the selection (or on explicit `ids`). prompts/list has ready-made workflows, completion/complete finishes a command id, a format, an effect or a swatch name, and vectorcraft://object/{id}, vectorcraft://command/{id}, vectorcraft://effect/{id} and vectorcraft://swatch/{name} read one thing at a time instead of the whole document. Backend: headless.",
+  "tools": [
+    {
+      "name": "add_text",
+      "description": "Create point type at (x, y) (the first baseline), area type when width/height are given (`fit` autoHeight grows the frame to the text, shrinkText scales the text down to fit), or type in/on an existing path (`path` id + `mode` area|onPath; `pathEffect` rainbow|skew|3dRibbon|stairStep|gravity). Returns the text object id, with `overflow: true` when the text doesn't fit its frame or path (the lines past it aren't drawn: enlarge the frame, shrink the text or give `fit`).",
+      "params": [
+        "color",
+        "fit",
+        "fitMinPercent",
+        "font",
+        "height",
+        "justify",
+        "mode",
+        "path",
+        "pathEffect",
+        "size",
+        "text",
+        "width",
+        "x",
+        "y"
+      ],
+      "required": [
+        "text"
+      ]
+    },
+    {
+      "name": "apply_effect",
+      "description": "Append a live effect (Effect menu) to the selection or `ids`. Omit `effect` to get the catalogue (ids, parameters, defaults). Examples: stylize.dropShadow {x, y, blur, opacity}, distort.roughen, warp.arc {bend}, path.offsetPath {offset}, pathfinder.add (on groups), blur.gaussian {radius}.",
+      "params": [
+        "effect",
+        "ids",
+        "params"
+      ],
+      "required": []
+    },
+    {
+      "name": "command_batch",
+      "description": "Run steps in order; each edit is its own undo step, or with atomic:true the whole batch is one (named `label`, else after its first edit). A param string that is exactly \"$N.path\" (N: 0-based step index) or \"$last.path\" takes that value from an earlier step's result, e.g. {\"id\":\"$1.id\"}; \"$$\" starts a literal \"$\". Returns completed, failed and results. Stops on the first error by default. At most 256 steps; kept step results total at most 8 MiB, past which the batch stops with the reason.",
+      "params": [
+        "atomic",
+        "label",
+        "steps",
+        "stop_on_error"
+      ],
+      "required": [
+        "steps"
+      ]
+    },
+    {
+      "name": "command_list",
+      "description": "Discover command ids, labels, parameter descriptions and enabled state. Returns an array.",
+      "params": [
+        "enabled_only",
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "command_run",
+      "description": "Run an engine command by id with its JSON params. Command parameters follow the registry's descriptions.",
+      "params": [
+        "id",
+        "params"
+      ],
+      "required": [
+        "id"
+      ]
+    },
+    {
+      "name": "create_graph",
+      "description": "Create a graph (graph tools) in the plot rectangle. Data as `csv` (first row: empty cell then series names; then one row per category: label, values…) or `series`/`categories`/`rows`. An empty CSV cell or a null in `rows` is a blank value (no column; lines break around it); a number in straight quotes is a label. Edit later with run_command graph.setData / graph.setType.",
+      "params": [
+        "categories",
+        "csv",
+        "height",
+        "rows",
+        "series",
+        "type",
+        "width",
+        "x",
+        "y"
+      ],
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    {
+      "name": "doc_inspect",
+      "description": "Summary of the active document, including artboards, layer tree, selection and history.",
+      "params": [
+        "childLimit",
+        "depth"
+      ],
+      "required": []
+    },
+    {
+      "name": "draw_path",
+      "description": "Create a path from points ([[x,y],…] or [{x,y,in?:[x,y],out?:[x,y]},…] with Bézier handles) or SVG path data `d`, then apply optional paint. Omitted paint fields inherit the current new-art appearance (initially white fill and 1 pt black stroke). For a filled path without an outline, pass an explicit fill and stroke:\"none\". Returns the new object id.",
+      "params": [
+        "closed",
+        "d",
+        "fill",
+        "points",
+        "stroke",
+        "strokeWidth"
+      ],
+      "required": []
+    },
+    {
+      "name": "draw_shape",
+      "description": "Create a live shape and apply optional paint. rectangle/ellipse: x, y, width, height (rectangle: radius = corner radius). polygon: cx, cy, radius, sides. star: cx, cy, radius1, radius2, points. line: x1, y1, x2, y2. Omitted paint fields inherit the current new-art appearance (initially white fill and 1 pt black stroke); lines start with no fill and a visible stroke. For a filled shape without an outline, pass an explicit fill and stroke:\"none\". Returns the new object id.",
+      "params": [
+        "cx",
+        "cy",
+        "fill",
+        "height",
+        "points",
+        "radius",
+        "radius1",
+        "radius2",
+        "rotation",
+        "shape",
+        "sides",
+        "stroke",
+        "strokeWidth",
+        "width",
+        "x",
+        "x1",
+        "x2",
+        "y",
+        "y1",
+        "y2"
+      ],
+      "required": [
+        "shape"
+      ]
+    },
+    {
+      "name": "export",
+      "description": "Export the active document with the engine's document.export (the same bytes in the app and headless), in any format of the `format` enum: vectors (svg/svgz with the artboard as viewBox, eps, dxf, emf, wmf), pdf (one page per artboard: all, or `artboard` / `range`), rasters (one rendered artboard: png, jpg, webp, gif, png8 as an indexed .png, tiff, bmp, tga, psd with its layers), txt (the stories, back to front), vectorcraft or template (a native copy or template; the document keeps its path). run_command document.formats lists each format's options. For SVG/SVGZ, top-level `outlineText: true` writes text as paths; DXF takes it too (its type is outlined anyway unless `preserve: editability`). PDF instead uses `options.advanced.outlineText: true`, default false (live text). `selection: true` exports only the selected objects, cropped to their bounds. Template layers are left out; live effects are kept (geometry baked, SVG filters for shadows/glows/blur). Without `path` the bytes come back as dataBase64.",
+      "params": [
+        "artboard",
+        "format",
+        "options",
+        "outlineText",
+        "path",
+        "range",
+        "scale",
+        "selection"
+      ],
+      "required": []
+    },
+    {
+      "name": "inspect_document",
+      "description": "Summary of the active document: artboards, layer tree (ids, names, kinds, bounds, fill/stroke), selection, undo history, current tool and default paint. On a large document pass depth: 0 for the layer skeleton (truncated levels report childCount), then locate objects with run_command document.find and read them with document.node.",
+      "params": [
+        "childLimit",
+        "depth"
+      ],
+      "required": []
+    },
+    {
+      "name": "inspect_ui",
+      "description": "UI state of the running desktop app: tool and options, panels, dialogs, view (zoom/center), window, documents, perf. Desktop app only.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "invoke_menu",
+      "description": "Invoke a menu item by its command id (same ids as list_commands, including UI-only commands like view.zoomIn or window.* in the desktop app).",
+      "params": [
+        "command",
+        "params"
+      ],
+      "required": [
+        "command"
+      ]
+    },
+    {
+      "name": "list_commands",
+      "description": "List VectorCraft commands (id, label, menu path, shortcut, parameter description, enabled state). Every editing action is a command; run any of them with run_command. Coordinates are points in document space, y down, origin at the first artboard's top-left.",
+      "params": [
+        "enabledOnly",
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "open_file",
+      "description": "Open a file as a new, active document: .vectorcraft, .drawcraft, .svg, .svgz, .pdf, .ai, .ait, .png, .jpg, .jpeg, .gif, .webp, .tif, .tiff, .bmp, .psd, .psb, .vctemplate, .dxf, .emf, .wmf, .eps, .af, .afdesign, .afpub (see run_command document.formats). Templates (.ait, native templates) open as a new untitled document. The reply's `warnings` say what didn't come in as it was (an EPS shown as its preview image says why its PostScript couldn't be read).",
+      "params": [
+        "path"
+      ],
+      "required": [
+        "path"
+      ]
+    },
+    {
+      "name": "open_panel",
+      "description": "Open a panel in the desktop app's dock by id (layers, swatches, stroke, align, pathfinder, transform, …; case-insensitive, display labels like \"Layers\" work too). Desktop app only.",
+      "params": [
+        "panel"
+      ],
+      "required": [
+        "panel"
+      ]
+    },
+    {
+      "name": "pathfinder",
+      "description": "Combine the selected (or `ids`) objects destructively, back to front: unite, minusFront, intersect, exclude, divide, trim, merge, crop, outline, minusBack. For a non-destructive version apply the pathfinder.* effect to a group.",
+      "params": [
+        "ids",
+        "operation"
+      ],
+      "required": [
+        "operation"
+      ]
+    },
+    {
+      "name": "pointer_gesture",
+      "description": "Drive the active tool with mouse events in document coordinates, exactly like the mouse would (e.g. a rectangle drag: down at (100,100), drag to (200,150), up at (200,150)). Optionally selects `tool` first.",
+      "params": [
+        "events",
+        "mods",
+        "tool"
+      ],
+      "required": [
+        "events"
+      ]
+    },
+    {
+      "name": "press_key",
+      "description": "Send a key press with modifiers, e.g. {key:\"Z\", mods:{cmd:true}} (undo), {key:\"Escape\"}, {key:\"Enter\"}. In the desktop app it goes through the real keyboard path; headless, it runs the command or tool bound to that shortcut.",
+      "params": [
+        "key",
+        "mods"
+      ],
+      "required": [
+        "key"
+      ]
+    },
+    {
+      "name": "redo",
+      "description": "Redo the last undone change (Edit → Redo).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "render_preview",
+      "description": "Render an artboard (default the first) as inline PNG without changing the document. max_side defaults to 1024, limited to 1..4096.",
+      "params": [
+        "artboard",
+        "max_side"
+      ],
+      "required": []
+    },
+    {
+      "name": "run_command",
+      "description": "Execute any VectorCraft command by id with JSON params (see list_commands for ids and params). Examples: {\"command\":\"object.group\"}, {\"command\":\"object.align\",\"params\":{\"horizontal\":\"left\"}}, {\"command\":\"file.new\",\"params\":{\"width\":800,\"height\":600}}. Returns the command's result (e.g. {id} for creation commands).",
+      "params": [
+        "command",
+        "params"
+      ],
+      "required": [
+        "command"
+      ]
+    },
+    {
+      "name": "save_file",
+      "description": "Save the active document with the engine's document.save: by default to its own file in its own format (native .vectorcraft unless it was opened from or saved as SVG, PDF or a restorable .ai). With `path`, the extension picks the format: .vectorcraft, .vctemplate, .pdf, .svg, .svgz, .ai. Other formats are exports (see export). The reply's `format` says what was written and `warnings` what that format loses.",
+      "params": [
+        "path"
+      ],
+      "required": []
+    },
+    {
+      "name": "screenshot",
+      "description": "Render the active artboard to PNG and return it as an image (optionally also saving it to `path`). With window:true (desktop app only) captures the whole app window instead.",
+      "params": [
+        "artboard",
+        "path",
+        "scale",
+        "window"
+      ],
+      "required": []
+    },
+    {
+      "name": "select_tool",
+      "description": "Switch the active tool (as clicking it in the Tools panel). Ids: selection, directSelection, groupSelection, pen, rectangle, roundedRectangle, ellipse, polygon, star, lineSegment, …",
+      "params": [
+        "tool"
+      ],
+      "required": [
+        "tool"
+      ]
+    },
+    {
+      "name": "set_paint",
+      "description": "Set fill, stroke and/or stroke weight on the selection (or `ids`) and as the default for new art.",
+      "params": [
+        "fill",
+        "ids",
+        "stroke",
+        "strokeWidth"
+      ],
+      "required": []
+    },
+    {
+      "name": "text_wrap",
+      "description": "Make the selected (or `ids`) objects wrap objects: area type below them in the same layer flows around them (offset in pt, invert = flow inside). `release: true` removes the wrap.",
+      "params": [
+        "ids",
+        "invert",
+        "offset",
+        "release"
+      ],
+      "required": []
+    },
+    {
+      "name": "transform",
+      "description": "Move, rotate, scale, reflect or shear the selection (or `ids`); several may be combined and run in that order. Angles in degrees (counter-clockwise), scale in %. `origin` [x,y] defaults to the selection centre; `copy` transforms a copy.",
+      "params": [
+        "copy",
+        "dx",
+        "dy",
+        "ids",
+        "origin",
+        "reflect",
+        "rotate",
+        "scale",
+        "scaleX",
+        "scaleY",
+        "shear"
+      ],
+      "required": []
+    },
+    {
+      "name": "type_text",
+      "description": "Type text into the focused widget (text tool, dialog field). Desktop app only.",
+      "params": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    },
+    {
+      "name": "ui_inspect",
+      "description": "Inspect the connected desktop interface; returns a tool error in headless mode.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "ui_screenshot",
+      "description": "Capture the connected desktop window as inline PNG; requires a running desktop app.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "undo",
+      "description": "Undo the last change (Edit → Undo).",
+      "params": [],
+      "required": []
+    }
+  ]
+}

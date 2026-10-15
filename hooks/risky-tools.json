@@ -1,0 +1,874 @@
+{
+  "schema": 1,
+  "about": "Per-tool risk table for hooks/craft-mcp-guard.py. The guard only ever ASKS. Names are matched after lowercasing and dropping every non-alphanumeric character, so 'doc_print', 'doc.print' and 'docPrint' are the same name; a leading 'cmd_' is dropped from LightCraft tool names. 'runners' are tools that run another command by id (command_run, execute, batch ...): the ids found in their arguments are checked against 'ask' and 'save' as well. Tool names and parameters were read from the live servers (see 'captured'); command ids are the ones LightCraft documents in its cmd_* tool descriptions. 'ask_ids' are command ids only (run through a runner, or typed as script text); they are not tool names, so the snapshots in data/tools cannot confirm them: they are the ids the app's skill names in its Never list (read from the live list_commands when the skills were written), and each must appear in that skill. 'command_text' (CADCraft) lists the words typed into command_line or script that ask. Anything not listed here is not checked, apart from the global rules and the workspace path check.",
+  "captured": {
+    "when": "2026-10",
+    "versions": {
+      "wordcraft": "0.7.0",
+      "gridcraft": "0.7.0",
+      "deckcraft": "0.7.0",
+      "pdfcraft": "0.8.0",
+      "photocraft": "0.9.0",
+      "vectorcraft": "0.11.0",
+      "designcraft": "0.8.0",
+      "cadcraft": "0.7.0",
+      "figcraft": "0.6.0",
+      "filmcraft": "0.8.0",
+      "effectcraft": "0.10.0",
+      "lightcraft": "0.8.0",
+      "soundcraft": "0.7.0"
+    }
+  },
+  "global": {
+    "id_keys": [
+      "id",
+      "command",
+      "cmd",
+      "method",
+      "action"
+    ],
+    "id_list_keys": [
+      "commands",
+      "steps",
+      "calls"
+    ],
+    "content_keys": [
+      "text",
+      "texts",
+      "title",
+      "body",
+      "caption",
+      "contents",
+      "content",
+      "label",
+      "description",
+      "alt",
+      "comment",
+      "note",
+      "message",
+      "query",
+      "find",
+      "replace",
+      "pattern",
+      "words",
+      "expression",
+      "script",
+      "code",
+      "csv",
+      "d",
+      "formula",
+      "input",
+      "value",
+      "values",
+      "data",
+      "base64",
+      "template",
+      "name",
+      "author",
+      "reason",
+      "filter",
+      "search"
+    ],
+    "ask_args": [
+      {
+        "arg": "conflict",
+        "equals": "overwrite",
+        "why": "asks to overwrite an existing file (conflict: overwrite)"
+      },
+      {
+        "arg": "overwrite",
+        "truthy": true,
+        "why": "asks to overwrite existing data (overwrite: true)"
+      }
+    ],
+    "ask_command_patterns": [
+      {
+        "pattern": "permanent",
+        "why": "permanently deletes data"
+      },
+      {
+        "pattern": "emptytrash|emptyrecentlydeleted|emptybin",
+        "why": "empties the trash"
+      },
+      {
+        "pattern": "^(file|doc|document|page)?print(onecopy|score)?$",
+        "why": "prints"
+      },
+      {
+        "pattern": "openurl|openlink|linkopen|openexternal|editexternal|openinbrowser|openwith",
+        "why": "opens something outside the document (browser, link or another application)"
+      },
+      {
+        "pattern": "runscript|evalscript|executescript|scriptrun|jsrun|runjs",
+        "why": "runs script code"
+      },
+      {
+        "pattern": "addtophotos",
+        "why": "adds files to Apple Photos (Apple Events)"
+      },
+      {
+        "pattern": "models?(download|install)|download(models?|placenames|mask)",
+        "why": "downloads or installs a model or data set"
+      },
+      {
+        "pattern": "^(doc|document|file|review)?(un)?(protect|encrypt)(sheet|workbook)?$",
+        "why": "sets or removes document passwords"
+      },
+      {
+        "pattern": "publishtoserver|sendtosibelius|exportsibelius|downloadvoices|voiceover",
+        "why": "sends data to another program or service, downloads voice data or records audio"
+      }
+    ],
+    "save_command_patterns": {
+      "pattern": "^(file|project|document|doc|workbook|session|presentation|design|cad)?(save|saveas|export[a-z]*)$",
+      "any_of": [
+        "path",
+        "dir"
+      ],
+      "exclude": [
+        "export.presets",
+        "export.checkTarget",
+        "export.photosImports",
+        "export.savePreset",
+        "export.deletePreset"
+      ],
+      "why": "called without an explicit path, so it overwrites the opened file in place or the app chooses where the output goes"
+    },
+    "relative_to_app_folder": [
+      "filmcraft",
+      "lightcraft",
+      "designcraft",
+      "cadcraft",
+      "deckcraft",
+      "figcraft",
+      "gridcraft",
+      "soundcraft",
+      "pdfcraft",
+      "photocraft"
+    ],
+    "relative_to_app_folder_note": "Servers that resolve a relative path inside their app folder: craft-sandbox starts the sandboxed ones in <workspace>/<app>; pdfcraft and photocraft document root-relative paths. For the others a relative path under a path key asks."
+  },
+  "apps": {
+    "wordcraft": {
+      "runners": [
+        "execute",
+        "batch"
+      ],
+      "ask": {
+        "key": "sends keyboard input to the app window, which can fire Print, Save or Export shortcuts"
+      },
+      "save": {
+        "save_document": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        }
+      },
+      "args": [],
+      "ask_ids": {
+        "file.encrypt": "sets a password on the document",
+        "file.share": "runs a sharing action",
+        "tools.recordMacro": "records a macro (a replayable list of commands)",
+        "tools.macros": "runs or edits macros (they can replay print or save)"
+      }
+    },
+    "gridcraft": {
+      "runners": [
+        "execute_command"
+      ],
+      "ask": {},
+      "save": {
+        "save_workbook": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        }
+      },
+      "args": [],
+      "ask_ids": {
+        "link.open": "opens a link in a browser",
+        "review.protectSheet": "sets a sheet password",
+        "review.protectWorkbook": "sets a workbook password",
+        "review.unprotectSheet": "removes a sheet password",
+        "automate.newScript": "stores a command script",
+        "automate.runScript": "runs a command script",
+        "automate.recordActions": "records a command script"
+      }
+    },
+    "deckcraft": {
+      "runners": [
+        "run_command",
+        "batch"
+      ],
+      "ask": {
+        "call_app": "makes a raw control-channel call to the desktop app, bypassing the typed tools",
+        "key": "sends keyboard input to the app window, which can fire Print, Save or Export shortcuts"
+      },
+      "save": {
+        "save_presentation": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        },
+        "export": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        }
+      },
+      "args": [
+        {
+          "tools": [
+            "hyperlink.create"
+          ],
+          "arg": "url",
+          "present": true,
+          "why": "adds a web link that stays in the saved document"
+        },
+        {
+          "tools": [
+            "hyperlink.create"
+          ],
+          "arg": "email",
+          "present": true,
+          "why": "adds an e-mail link that stays in the saved document"
+        }
+      ],
+      "ask_ids": {
+        "file.package": "copies the document's fonts and links into a package folder"
+      }
+    },
+    "pdfcraft": {
+      "runners": [
+        "command_run",
+        "command_batch",
+        "doc_batch",
+        "action_run"
+      ],
+      "ask": {
+        "doc_print": "prints to a physical printer (a side effect outside the document)",
+        "link_open": "follows a link and opens another file as a new document",
+        "doc_protect": "sets open or permissions passwords on the PDF",
+        "doc_unprotect": "removes password security from the PDF",
+        "redact_apply": "applies the marked redactions to the document (permanent once saved)",
+        "doc_remove_hidden": "removes hidden information from the document (permanent once saved)",
+        "content_delete": "deletes added page content",
+        "js_run": "runs Acrobat JavaScript in the document",
+        "js_set_document_script": "adds, replaces or deletes document-level JavaScript",
+        "form_set_script": "sets JavaScript on a form field",
+        "sign_document": "signs the document with a digital ID",
+        "sign_id_create": "creates a digital ID file (a certificate and private key)",
+        "sign_trust": "adds certificates to the trusted certificates used to validate signatures",
+        "sign_keychain_ids": "lists signing identities in the user's macOS keychains",
+        "action_run": "runs an Action Wizard sequence, possibly over a folder of files",
+        "links_from_urls": "turns web addresses in the text into clickable links in the saved PDF"
+      },
+      "save": {
+        "doc_save": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        },
+        "doc_export_text": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        },
+        "doc_export_office": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        },
+        "doc_export_images": {
+          "any_of": [
+            "folder"
+          ],
+          "why": "called without an explicit folder, so the app chooses where the output goes"
+        }
+      },
+      "args": [
+        {
+          "tools": [
+            "js_enabled"
+          ],
+          "arg": "enabled",
+          "present": true,
+          "why": "changes the Acrobat JavaScript preference"
+        },
+        {
+          "tools": [
+            "form_set_actions",
+            "form.setActions"
+          ],
+          "arg": "submit",
+          "present": true,
+          "nested": true,
+          "why": "makes a form field submit data to a URL when used"
+        },
+        {
+          "tools": [
+            "form_set_actions",
+            "form.setActions"
+          ],
+          "arg": "javascript",
+          "present": true,
+          "nested": true,
+          "why": "makes a form field run JavaScript when used"
+        },
+        {
+          "tools": [
+            "form_set_actions",
+            "form.setActions"
+          ],
+          "arg": "url",
+          "present": true,
+          "nested": true,
+          "why": "makes a form field open a web address when used"
+        },
+        {
+          "tools": [
+            "form_set_actions",
+            "form.setActions"
+          ],
+          "arg": "menu",
+          "present": true,
+          "nested": true,
+          "why": "makes a form field run a menu command (such as Print) when used"
+        },
+        {
+          "tools": [
+            "link_add",
+            "link_edit",
+            "link.add",
+            "link.edit"
+          ],
+          "arg": "url",
+          "present": true,
+          "why": "adds or changes a clickable link to a web address in the PDF"
+        },
+        {
+          "tools": [
+            "doc_close"
+          ],
+          "arg": "discard_changes",
+          "truthy": true,
+          "why": "closes the document and discards unsaved changes"
+        }
+      ]
+    },
+    "photocraft": {
+      "runners": [
+        "command_run",
+        "command_batch"
+      ],
+      "ask": {
+        "control_call": "makes a raw control-protocol call (bridge mode), bypassing the typed tools",
+        "ui_menu_invoke": "opens a menu command by name or path (for example File > Print...), which can print, export or save where the app chooses"
+      },
+      "save": {
+        "doc_save": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        },
+        "doc_export": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        }
+      },
+      "args": [],
+      "ask_ids": {
+        "plugin.run": "runs a plug-in",
+        "actions.play": "plays a recorded action (it can run any command)",
+        "file.printOneCopy": "prints",
+        "plugin.install": "installs a plug-in",
+        "file.automate.runDroplet": "runs a droplet (a script) on files",
+        "file.automate.batch": "runs an action over a folder of files"
+      }
+    },
+    "vectorcraft": {
+      "runners": [
+        "command_run",
+        "command_batch",
+        "run_command",
+        "invoke_menu"
+      ],
+      "ask": {
+        "invoke_menu": "opens a menu command by name or path (for example File > Print...), which can print, export or save where the app chooses"
+      },
+      "save": {
+        "save_file": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        },
+        "export": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        }
+      },
+      "args": []
+    },
+    "designcraft": {
+      "runners": [
+        "execute",
+        "batch"
+      ],
+      "ask": {
+        "key": "sends keyboard input to the app window, which can fire Print, Save or Export shortcuts",
+        "dialog_confirm": "presses OK in the app's open dialog (for example Print or Save)"
+      },
+      "save": {
+        "save_document": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        },
+        "export_png": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        }
+      },
+      "args": [
+        {
+          "tools": [
+            "hyperlink.create"
+          ],
+          "arg": "url",
+          "present": true,
+          "why": "adds a web link that stays in the saved document"
+        },
+        {
+          "tools": [
+            "hyperlink.create"
+          ],
+          "arg": "email",
+          "present": true,
+          "why": "adds an e-mail link that stays in the saved document"
+        }
+      ],
+      "ask_ids": {
+        "script.run": "runs a whole script in one call",
+        "file.package": "copies the document's fonts and links into a package folder"
+      }
+    },
+    "cadcraft": {
+      "runners": [
+        "execute"
+      ],
+      "ask": {},
+      "save": {
+        "save": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        }
+      },
+      "args": [],
+      "ask_ids": {
+        "plot": "prints or plots the drawing",
+        "print": "prints or plots the drawing",
+        "exportpdf": "writes PDF files where the app chooses",
+        "publish": "prints or writes PDF files for several sheets",
+        "pdfbook": "writes a PDF book",
+        "printpdf": "writes a PDF book",
+        "pdfb": "writes a PDF book",
+        "lisp": "runs LISP code",
+        "appload": "loads and runs application code",
+        "ap": "loads and runs application code",
+        "wblock": "writes blocks to another file",
+        "w": "writes blocks to another file",
+        "export": "writes another file",
+        "exp": "writes another file",
+        "xattach": "attaches another drawing file",
+        "xa": "attaches another drawing file",
+        "import": "reads another file",
+        "imp": "reads another file",
+        "insert": "inserts a block or another file",
+        "purge": "deletes unused named objects in bulk",
+        "pu": "deletes unused named objects in bulk",
+        "overkill": "deletes duplicate geometry in bulk",
+        "compare": "reads another drawing file",
+        "datalink": "links an external data file",
+        "tableexport": "writes a table to a file",
+        "script": "runs a script file",
+        "scr": "runs a script file"
+      },
+      "command_text": {
+        "tools": [
+          "command_line",
+          "script"
+        ],
+        "key": "text",
+        "words": {
+          "plot": "prints or plots the drawing",
+          "print": "prints or plots the drawing",
+          "exportpdf": "writes PDF files where the app chooses",
+          "publish": "prints or writes PDF files for several sheets",
+          "pdfbook": "writes a PDF book",
+          "printpdf": "writes a PDF book",
+          "wblock": "writes blocks to another file",
+          "export": "writes another file",
+          "xattach": "attaches another drawing file",
+          "import": "reads another file",
+          "insert": "inserts a block or another file",
+          "purge": "deletes unused named objects in bulk",
+          "overkill": "deletes duplicate geometry in bulk",
+          "compare": "reads another drawing file",
+          "datalink": "links an external data file",
+          "tableexport": "writes a table to a file",
+          "lisp": "runs LISP code",
+          "appload": "loads and runs application code",
+          "script": "runs a script file",
+          "attach": "attaches another drawing file (external reference)"
+        },
+        "first_words": {
+          "pdfb": "writes a PDF book",
+          "ap": "loads and runs application code",
+          "w": "writes blocks to another file",
+          "exp": "writes another file",
+          "xa": "attaches another drawing file",
+          "imp": "reads another file",
+          "pu": "deletes unused named objects in bulk",
+          "scr": "runs a script file"
+        },
+        "lisp_why": "starts a LISP expression (runs code)",
+        "note": "Words are compared after dropping a leading -, _, . or ' (so -PLOT is PLOT). Long names ask anywhere on a line (in AutoCAD scripts a space can end a command); short aliases only as a line's first word. Aliases from the live CADCraft command list (v0.7.0)."
+      }
+    },
+    "figcraft": {
+      "runners": [
+        "run_command",
+        "batch"
+      ],
+      "ask": {},
+      "save": {
+        "save_file": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        },
+        "export": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        }
+      },
+      "args": [
+        {
+          "tools": [
+            "file.close"
+          ],
+          "arg": "force",
+          "truthy": true,
+          "why": "closes without saving, discarding unsaved work (force: true)"
+        }
+      ],
+      "ask_ids": {
+        "plugin.run": "runs third-party plug-in code",
+        "plugin.event": "sends an event to plug-in code",
+        "plugin.import": "imports a plug-in",
+        "plugin.directory.install": "installs a plug-in from the directory",
+        "widget.insert": "inserts a widget (third-party code)",
+        "widget.click": "runs a widget's code",
+        "library.publishToServer": "publishes a library to a server",
+        "pref.publishServer": "changes the publish server"
+      }
+    },
+    "filmcraft": {
+      "runners": [
+        "command_run",
+        "command_batch"
+      ],
+      "ask": {
+        "ui_control": "makes a raw control call to the live desktop app, bypassing the typed tools",
+        "ui_key": "sends keyboard input to the app window, which can fire Print, Save or Export shortcuts"
+      },
+      "save": {
+        "file.saveAs": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        },
+        "file.exportMedia": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        },
+        "file.exportFrame": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        }
+      },
+      "args": [
+        {
+          "tools": [
+            "media.makeOffline"
+          ],
+          "arg": "deleteFiles",
+          "truthy": true,
+          "why": "deletes the media files from disk (deleteFiles: true)"
+        },
+        {
+          "tools": [
+            "file.closeProject",
+            "file.closeAllProjects",
+            "file.close"
+          ],
+          "arg": "force",
+          "truthy": true,
+          "why": "closes without saving, discarding unsaved edits (force: true)"
+        }
+      ],
+      "ask_ids": {
+        "tts.downloadVoices": "downloads voice data from the network",
+        "audio.voiceover.start": "records from the microphone",
+        "file.projectManager": "copies media and can overwrite files"
+      }
+    },
+    "effectcraft": {
+      "runners": [
+        "command_run",
+        "command_batch",
+        "execute_command",
+        "batch"
+      ],
+      "ask": {
+        "run_script": "runs JavaScript (an After Effects-style script) inside the app",
+        "script_ui": "drives the dialogs that scripts open (it can press their buttons)"
+      },
+      "save": {
+        "save_project": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        }
+      },
+      "args": [
+        {
+          "tools": [
+            "set_property"
+          ],
+          "arg": "expression",
+          "present": true,
+          "why": "sets an After Effects-style expression, which is JavaScript the app evaluates"
+        }
+      ],
+      "ask_ids": {
+        "file.installScript": "installs a script into the app",
+        "file.executeFile": "runs a script file",
+        "file.watchFolder": "watches a folder and runs what appears there",
+        "script.run": "runs JavaScript",
+        "file.runScript": "runs a script file",
+        "prop.setExpression": "sets an After Effects-style expression, which the app evaluates as JavaScript"
+      }
+    },
+    "lightcraft": {
+      "runners": [
+        "command_run",
+        "run_command",
+        "command_batch"
+      ],
+      "ask": {
+        "photo.deletePermanently": "deletes photos permanently (not just to Recently Deleted)",
+        "library.emptyRecentlyDeleted": "empties Recently Deleted, removing those photos from the library for good",
+        "photo.editExternal": "hands a copy of the photo to an external editor application",
+        "export.addToPhotos": "adds files to Apple Photos (Apple Events to another application)",
+        "photo.moveToFolder": "moves the photos' original files on disk",
+        "folder.move": "moves a folder on disk",
+        "folder.rename": "renames a folder on disk",
+        "denoise.models.download": "downloads a model from the network",
+        "denoise.models.install": "installs a model file into the app",
+        "faces.models.download": "downloads a model from the network",
+        "faces.models.install": "installs a model file into the app",
+        "segment.model.download": "downloads the AI mask model from the network (about 3.4 GB per the command docs)",
+        "metadata.downloadPlaceNames": "downloads the GeoNames place-name data set from the network",
+        "photo.convertToDng": "converts raw files to DNG, writing new files next to the originals",
+        "photo.saveMetadataToFile": "writes metadata into the photo file or an XMP sidecar next to the original",
+        "library.autoImport": "imports from a watched folder, which may be outside the workspace",
+        "folder.create": "creates a folder on disk, possibly outside the workspace",
+        "library.autoImportScan": "imports from a watched folder, which may be outside the workspace",
+        "photo.rename": "renames the original files on disk",
+        "folder.synchronize": "syncs a folder with the disk: imports new files, relinks moved ones and can remove missing ones",
+        "library.toggleAutoWriteXmp": "changes a persistent setting: writes edits into XMP files next to the originals"
+      },
+      "save": {
+        "export": {
+          "any_of": [
+            "path",
+            "dir"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        },
+        "app.export": {
+          "any_of": [
+            "path",
+            "dir"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        },
+        "export.contactSheet": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        }
+      },
+      "args": [
+        {
+          "tools": [
+            "export",
+            "app.export"
+          ],
+          "arg": "addToPhotos",
+          "truthy": true,
+          "why": "adds the exported files to Apple Photos (Apple Events)"
+        },
+        {
+          "tools": [
+            "import",
+            "library.import"
+          ],
+          "arg": "mode",
+          "equals": "move",
+          "why": "moves the original files into the library (the sources are removed; undo does not restore them)"
+        }
+      ]
+    },
+    "soundcraft": {
+      "runners": [
+        "execute",
+        "batch"
+      ],
+      "ask": {
+        "menu_invoke": "opens a menu command by name or path (for example File > Print...), which can print, export or save where the app chooses",
+        "key": "sends keyboard input to the app window, which can fire Print, Save or Export shortcuts"
+      },
+      "save": {
+        "save_session": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so it overwrites the opened file in place or picks its own location"
+        },
+        "bounce_mix": {
+          "any_of": [
+            "path"
+          ],
+          "why": "called without an explicit path, so the app chooses where the output goes"
+        }
+      },
+      "args": [
+        {
+          "tools": [
+            "save_session"
+          ],
+          "arg": "replace",
+          "truthy": true,
+          "why": "saves over another existing file (replace: true)"
+        }
+      ],
+      "ask_ids": {
+        "file.print_score": "prints the score",
+        "file.send_to_sibelius": "hands the session to another program (Sibelius)",
+        "file.export_sibelius": "writes a file for another program (Sibelius)"
+      }
+    }
+  },
+  "never_reviewed_about": "Command ids that a skill's Never list names but the MCP guard deliberately does not ask for, each with the reason. tools/lint_skills.py fails on a Never id that is neither guarded nor listed here.",
+  "never_reviewed": {
+    "deckcraft": {
+      "file.recovery.discard": "discards unsaved edits or recovery data inside the app; the guard covers effects outside the open document, so the skill's Never line is the only control",
+      "file.revert": "discards unsaved edits or recovery data inside the app; the guard covers effects outside the open document, so the skill's Never line is the only control"
+    },
+    "designcraft": {
+      "file.revert": "discards unsaved edits or recovery data inside the app; the guard covers effects outside the open document, so the skill's Never line is the only control",
+      "links.embed": "changes where placed graphics come from inside the document; a path it is given is checked by the path rule",
+      "links.relink": "changes where placed graphics come from; a path it is given is checked by the path rule",
+      "links.relinkFolder": "changes where placed graphics come from; a folder it is given is checked by the path rule"
+    },
+    "effectcraft": {
+      "comp.copyFrame": "window/clipboard command; not verified headless; no file outside the fence",
+      "edit.purge": "clears caches and undo history inside the app; not guarded",
+      "file.relinkFootage": "relinks footage; a path it is given is checked by the path rule",
+      "file.revealInFinder": "asks Finder to show a file; outside the guard's model (window command)",
+      "prefs.open": "opens the preferences window; window command, fails headless",
+      "project.deleteWithoutConfirmation": "deletes project items inside the open document (undoable); not guarded",
+      "templates.delete": "changes app-wide settings or presets, not files outside the fence; not guarded",
+      "templates.saveAs": "changes app-wide settings or presets, not files outside the fence; not guarded"
+    },
+    "figcraft": {
+      "collab.*": "network commands; the macOS sandbox refuses the network for FigCraft, which is the control",
+      "file.close": "asks only with force: true (risky-tools args rule); a plain close is harmless",
+      "file.revert": "discards unsaved edits or recovery data inside the app; the guard covers effects outside the open document, so the skill's Never line is the only control",
+      "library.add": "network/library command; the sandbox refuses the network",
+      "plugin.directory.*": "plug-in directory (network); the sandbox refuses the network; plugin.directory.install asks",
+      "version.restore": "discards unsaved edits or recovery data inside the app; the guard covers effects outside the open document, so the skill's Never line is the only control"
+    },
+    "filmcraft": {
+      "file.close": "asks only with force: true (args rule); a plain close is harmless",
+      "file.closeProject": "asks only with force: true (args rule); a plain close is harmless",
+      "media.makeOffline": "asks only with deleteFiles: true (args rule); without it nothing is deleted",
+      "prefs.reset": "changes app-wide settings or presets, not files outside the fence; not guarded",
+      "shortcuts.set": "changes app-wide settings or presets, not files outside the fence; not guarded"
+    },
+    "gridcraft": {
+      "home.deleteSheet": "removes a sheet from the open book (in-document edit); not guarded",
+      "object.delete": "removes a chart or object from the open book (in-document edit); not guarded",
+      "file.close": "closes the open workbook; whether it prompts about unsaved edits is not verified on v0.7.0; no effect outside the document"
+    },
+    "photocraft": {
+      "brush.presets.*": "changes app-wide settings or presets, not files outside the fence; not guarded",
+      "document.presets.*": "changes app-wide settings or presets, not files outside the fence; not guarded",
+      "edit.presets.*": "changes app-wide settings or presets, not files outside the fence; not guarded",
+      "gradient.presets.*": "changes app-wide settings or presets, not files outside the fence; not guarded",
+      "swatches.*": "changes app-wide settings or presets, not files outside the fence; not guarded",
+      "file.open": "refused by the PhotoCraft server under the fence (the skill says so); not guarded",
+      "file.placeEmbedded": "refused by the PhotoCraft server under the fence (the skill says so); not guarded",
+      "file.revealInFinder": "refused by the PhotoCraft server under the fence (the skill says so); not guarded",
+      "file.revert": "refused by the PhotoCraft server under the fence (the skill says so); not guarded",
+      "file.saveACopy": "refused by the PhotoCraft server under the fence (the skill says so); not guarded",
+      "file.scripts.*": "refused by the PhotoCraft server under the fence (the skill says so); not guarded",
+      "file.scripts.browse": "refused by the PhotoCraft server under the fence (the skill says so); not guarded"
+    },
+    "soundcraft": {
+      "app.quit": "ends the server session; no effect outside it",
+      "session.revert": "discards unsaved edits or recovery data inside the app; the guard covers effects outside the open document, so the skill's Never line is the only control"
+    },
+    "vectorcraft": {
+      "color.loadProfile": "loads a colour profile; a path it is given is checked by the path rule",
+      "effect.apply": "an in-document edit; named in Never only for a specific misuse",
+      "file.recovery.discard": "discards unsaved edits or recovery data inside the app; the guard covers effects outside the open document, so the skill's Never line is the only control",
+      "text.addFontFiles": "adds font files; paths it is given are checked by the path rule",
+      "text.findFontFiles": "searches for font files; paths it is given are checked by the path rule"
+    },
+    "wordcraft": {
+      "file.inspect": "with remove it deletes parts of the open document (in-document edit, undoable); not guarded",
+      "review.restrict": "sets editing restrictions inside the document; not guarded"
+    }
+  }
+}

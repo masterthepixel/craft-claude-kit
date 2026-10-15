@@ -1,0 +1,62 @@
+[
+  {
+    "tool": "command_run",
+    "args": {"id": "file.newProject", "params": {"name": "smoke"}},
+    "expect": {"isError": false},
+    "note": "a new, unsaved project"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "file.newSequence", "params": {"name": "Smoke", "width": 320, "height": 240, "fps": 24, "video": 1, "audio": 1}},
+    "expect": {"isError": false, "json": {"sequence": {"$gt": 0}}},
+    "note": "a 320x240 sequence becomes the active one"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "file.newColorMatte", "params": {"color": "#336699", "seconds": 1}},
+    "expect": {"isError": false, "json": {"item": {"$gt": 0}}},
+    "note": "generated media: no file is imported"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "timeline.place", "params": {"item": "{step3.item}", "track": "V1", "seconds": 0}},
+    "expect": {"isError": false, "json": {"clips[0]": {"$gt": 0}}},
+    "note": "track name V1 is accepted; the sequence shows it as Video 1"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "file.saveAs", "params": {"path": "{root}/_doctor/smoke.fcproj"}},
+    "expect": {"isError": false, "json": {"path": {"$regex": "_doctor/smoke\\.fcproj$"}}},
+    "note": "explicit path inside the workspace; the folder must exist (doctor creates _doctor/)"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "file.open", "params": {"path": "{root}/_doctor/smoke.fcproj"}},
+    "expect": {"isError": false},
+    "note": "read the saved project back"
+  },
+  {
+    "tool": "sequence_inspect",
+    "args": {},
+    "expect": {"isError": false, "json": {"name": "Smoke", "video[0].items[0].duration": 254016000000}},
+    "note": "the saved project holds the 1 second clip on the sequence named Smoke"
+  },
+  {
+    "tool": "render_frame",
+    "args": {"seconds": 0.25, "max_side": 160},
+    "expect": {"isError": false, "image": true},
+    "note": "a frame renders from the reopened project"
+  },
+  {
+    "tool": "command_run",
+    "args": {"id": "file.exportMedia", "params": {"path": "{root}/_doctor/smoke.mp4", "format": "h264", "range": "entire", "wait": true}},
+    "expect": {"isError": false, "json": {"result.bytes": {"$gt": 0}, "offlineMedia": []}},
+    "note": "H.264 export of the reopened project (the step a profile without the BINDIR rule crashed with -11)"
+  },
+  {
+    "tool": "render_frame",
+    "args": {"seconds": 0.5, "max_side": 160},
+    "expect": {"isError": false, "image": true},
+    "note": "the server still renders after the export"
+  }
+]

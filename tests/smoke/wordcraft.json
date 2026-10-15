@@ -1,0 +1,49 @@
+[
+  {
+    "tool": "new_document",
+    "args": {"template": "blank"},
+    "expect": {"isError": false},
+    "note": "fresh blank document"
+  },
+  {
+    "tool": "type_text",
+    "args": {"text": "Smoke title\nSmoke body line", "paragraphs": true},
+    "expect": {"isError": false},
+    "note": "two paragraphs"
+  },
+  {
+    "tool": "select_text",
+    "args": {"text": "Smoke title"},
+    "expect": {"isError": false}
+  },
+  {
+    "tool": "execute",
+    "args": {"command": "para.style", "params": {"style": "Heading 1"}},
+    "expect": {"isError": false},
+    "note": "style by name"
+  },
+  {
+    "tool": "save_document",
+    "args": {"path": "{root}/_doctor/smoke.docx"},
+    "expect": {"isError": false, "json": {"saved": true, "encrypted": false, "path": {"$regex": "_doctor/smoke\\.docx$"}}},
+    "note": "explicit path inside _doctor (doctor.sh removes the folder afterwards)"
+  },
+  {
+    "tool": "open_document",
+    "args": {"path": "{root}/_doctor/smoke.docx"},
+    "expect": {"isError": false, "json": {"paragraphs": 2}},
+    "note": "read the saved file back"
+  },
+  {
+    "tool": "inspect_document",
+    "args": {},
+    "expect": {"isError": false, "json": {"blocks.0.style": "Heading1", "blocks.0.text": "Smoke title", "blocks.1.text": "Smoke body line"}},
+    "note": "content and style survived the round trip"
+  },
+  {
+    "tool": "render_page",
+    "args": {"page": 1},
+    "expect": {"isError": false, "image": true, "json": {"pages": 1}},
+    "note": "page renders to a PNG"
+  }
+]

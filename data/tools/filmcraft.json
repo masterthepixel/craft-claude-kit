@@ -1,0 +1,169 @@
+{
+  "server": {
+    "name": "filmcraft",
+    "version": "0.8.0"
+  },
+  "instructions": "FilmCraft video editor (Premiere Pro-class). Every edit is an engine command: `command_list` to discover ids/params, `command_run` to execute (undoable; `command_batch` runs several). `doc_inspect` (or `project_inspect`/`sequence_inspect`) returns ids you can pass to commands; `render_preview` shows the result. In bridge mode the `ui_*` tools drive the live app: `ui_elements` lists clickable ids, `ui_click`/`ui_drag`/`ui_key` operate it, `ui_screenshot` shows it. Time is in ticks: 254016000000 per second (commands also accept `seconds`, `frame` or `timecode`).",
+  "tools": [
+    {
+      "name": "command_batch",
+      "description": "Run several commands in order: {steps: [{id, params?}], stop_on_error?: true}. Returns {completed, failed, results: [{ok, result | error}]}; each edit is its own undo step.",
+      "params": [
+        "steps",
+        "stop_on_error"
+      ],
+      "required": [
+        "steps"
+      ]
+    },
+    {
+      "name": "command_list",
+      "description": "List every command (id, label, menu path, shortcut, parameter doc, enabled now). Menus, shortcuts, panels and timeline gestures all map to these ids.",
+      "params": [
+        "enabled_only",
+        "filter"
+      ],
+      "required": []
+    },
+    {
+      "name": "command_run",
+      "description": "Run a command by id with JSON params, e.g. {\"id\":\"timeline.razor\",\"params\":{\"seconds\":3.5}} or {\"id\":\"effects.apply\",\"params\":{\"effect\":\"Gaussian Blur\"}}. Undoable edits land in History.",
+      "params": [
+        "id",
+        "params"
+      ],
+      "required": [
+        "id"
+      ]
+    },
+    {
+      "name": "doc_inspect",
+      "description": "The project as JSON: the tree (as project_inspect) plus the active sequence (as sequence_inspect; null when there is none).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "media_import",
+      "description": "Import media files by absolute path (MP4/MOV, WAV/MP3/FLAC/AIFF/Ogg, PNG/JPEG/…).",
+      "params": [
+        "bin",
+        "image_sequence",
+        "paths"
+      ],
+      "required": [
+        "paths"
+      ]
+    },
+    {
+      "name": "project_inspect",
+      "description": "Project tree (bins and items with ids, types, durations), active sequence, source clip.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "render_frame",
+      "description": "Render the active sequence's frame (at `seconds` or the playhead) and return it as PNG.",
+      "params": [
+        "max_side",
+        "seconds"
+      ],
+      "required": []
+    },
+    {
+      "name": "render_preview",
+      "description": "The active sequence's frame at `seconds` (default: the playhead) as PNG, same as render_frame (bridge mode: Program monitor screenshot).",
+      "params": [
+        "max_side",
+        "seconds"
+      ],
+      "required": []
+    },
+    {
+      "name": "sequence_inspect",
+      "description": "The active sequence as JSON: settings, tracks, clips (ids, start/duration in ticks and frames, effects), transitions, markers, in/out, playhead, selection. 254016000000 ticks = 1 second.",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "ui_click",
+      "description": "Live app: click an element by id or at x,y (points). Supports right/middle button, double-click (count=2) and modifiers.",
+      "params": [
+        "button",
+        "count",
+        "id",
+        "modifiers",
+        "x",
+        "y"
+      ],
+      "required": []
+    },
+    {
+      "name": "ui_control",
+      "description": "Live app: call any control-channel method directly (ui.set, ui.scroll, ui.timeline.hit, ui.timeline.locate, ui.playback, ui.panel.show, ui.menu.list, …).",
+      "params": [
+        "method",
+        "params"
+      ],
+      "required": [
+        "method"
+      ]
+    },
+    {
+      "name": "ui_drag",
+      "description": "Live app: press-drag-release from one point/element to another (move clips, trim edges, scrub, resize panels, drop project items onto tracks).",
+      "params": [
+        "from",
+        "modifiers",
+        "steps",
+        "to"
+      ],
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    {
+      "name": "ui_elements",
+      "description": "Live app: every on-screen interactive element with id, label and rect (points). Use ids with ui_click/ui_drag.",
+      "params": [
+        "prefix"
+      ],
+      "required": []
+    },
+    {
+      "name": "ui_inspect",
+      "description": "Live app: UI state (tool, workspace, panels, timeline zoom, playback, selection, fps).",
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "ui_key",
+      "description": "Live app: press a key or shortcut (e.g. `Space`, `L`, `Cmd+K`, `Shift+Delete`, `Cmd+Z`).",
+      "params": [
+        "key"
+      ],
+      "required": [
+        "key"
+      ]
+    },
+    {
+      "name": "ui_screenshot",
+      "description": "Live app: screenshot of the window or one panel (PNG).",
+      "params": [
+        "max_side",
+        "panel"
+      ],
+      "required": []
+    },
+    {
+      "name": "ui_type",
+      "description": "Live app: type text into the focused field.",
+      "params": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ]
+    }
+  ]
+}

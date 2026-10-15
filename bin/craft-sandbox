@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# craft-sandbox (craft-claude-kit): run one program inside a macOS sandbox fenced to one folder.
+#
+#   craft-sandbox ROOT PROGRAM [ARGS...]
+#
+# PROGRAM may read and write ROOT. It cannot read anything else under your home folder or under
+# /Volumes, cannot write anywhere except ROOT and the system temp folders, and has no network.
+# The rules and their limits are explained in share/craft.sb.
+#
+# Profile (the first one found is used):
+#   1. $CRAFT_SANDBOX_PROFILE (if set, it must exist)
+#   2. <kit home>/share/craft.sb, kit home = $CRAFT_KIT_HOME or ~/.local/share/craft-claude-kit
+#   3. ../share/craft.sb next to this script, when it runs from a kit checkout or runtime copy
+#   4. ~/.local/share/craft-sandbox/craft.sb (older hand-made setups; a one-line notice on stderr
+#      says so, because that profile is not the kit's and may have other rules)
+#
+# Fails closed: every problem exits non-zero before PROGRAM starts; it never runs PROGRAM unfenced.
+# sandbox-exec is deprecated by Apple but still works on current macOS.
+set -euo pipefail
+
+SANDBOX_EXEC=/usr/bin/sandbox-exec
+# install.sh may pin this line to a non-default kit home when it copies the wrapper.
+KIT_HOME_DEFAULT=${CRAFT_KIT_HOME:-"${HOME:-}/.local/share/craft-claude-kit"} # craft-kit:kit-home
+
+die() { # MESSAGE [HINT] [EXIT]
+  printf 'craft-sandbox: %s\n' "$1" >&2
+  [ -z "${2:-}" ] || printf 'craft-sandbox: fix: %s\n' "$2" >&2
+  exit "${3:-1}"
+}
+
+usage() {
+  cat <<'EOF'
+usage: craft-sandbox ROOT PROGRAM [ARGS...]
+
+Runs PROGRAM in a macOS sandbox: read/write only inside ROOT (an absolute folder path, created if
+missing), no other files under your home folder or /Volumes, writes elsewhere refused, no network.
+EOF
+}
+
+# Follow symlinks until PATH is a real file; print its absolute physical path.
+resolve() {
+  local p=$1 n=0 t
+  while [ -L "$p" ]; do
+    n=$((n + 1))
+    [ "$n" -le 40 ] || return 1
+    t=$(readlink "$p") || return 1
+    case "$t" in /*) p=$t ;; *) p=$(dirname "$p")/$t ;; esac
+  done
+  t=$(cd -P "$(dirname "$p")" 2>/dev/null && pwd -P) || return 1
+  printf '%s/%s\n' "${t%/}" "$(basename "$p")"
+}
+
+case "${1:-}" in -h | --help) usage; exit 0 ;; esac
+[ $# -ge 2 ] || { usage >&2; exit 2; }
+
+[ "$(uname -s)" = Darwin ] && [ -x "$SANDBOX_EXEC" ] \
+  || die "$SANDBOX_EXEC is not available" "craft-sandbox needs macOS 13 or newer."
+[ -n "${HOME:-}" ] && [ -d "$HOME" ] || die "HOME is not set to an existing folder" "Run it from a normal login session."
+
+root_in=$1
+shift
+case "$root_in" in
+  /*) ;;
+  *) die "ROOT must be an absolute path, got: $root_in" "Pass the full path of the app's workspace folder, for example $HOME/craft-workspace/gridcraft." 2 ;;
+esac
+mkdir -p "$root_in" 2>/dev/null || die "cannot create the folder $root_in" "Check that its parent folder exists and is writable."
+ROOT=$(cd -P "$root_in" && pwd -P) || die "cannot open the folder $root_in"
+HOME_REAL=$(cd -P "$HOME" && pwd -P) || die "cannot open the home folder $HOME"
+
+# A fence around / or around the whole home folder would be no fence at all.
+[ "$ROOT" != / ] || die "refusing ROOT=/ (that would expose the whole disk)" "Use one app folder, for example $HOME/craft-workspace/gridcraft." 2
+case "$HOME_REAL/" in
+  "$ROOT"/*) die "refusing ROOT=$ROOT: it contains your home folder" "Use one app folder, for example $HOME/craft-workspace/gridcraft." 2 ;;
+esac
+
+prog=$1
+shift
+case "$prog" in
+  */*) bin_in=$prog ;;
+  *) bin_in=$(command -v "$prog" 2>/dev/null) || die "program not found: $prog" "Pass the program's full path." 127 ;;
+esac
+[ -f "$bin_in" ] && [ -x "$bin_in" ] || die "not an executable file: $bin_in" "Pass the full path of the program to run (for example ~/.local/bin/gridcraft-cli)." 126
+BIN=$(resolve "$bin_in") || die "cannot resolve the real path of $bin_in" "" 126
+
+if [ -n "${CRAFT_SANDBOX_PROFILE:-}" ]; then
+  PROFILE=$CRAFT_SANDBOX_PROFILE
+  [ -f "$PROFILE" ] || die "CRAFT_SANDBOX_PROFILE points to a missing file: $PROFILE" "Unset it, or point it at share/craft.sb from the kit."
+else
+  # Next to this script only when it sits in a kit checkout or runtime copy (bin/ beside lib/).
+  kit_dir=$(cd -P "$(dirname "$0")/.." 2>/dev/null && pwd -P) || kit_dir=""
+  [ -n "$kit_dir" ] && [ -f "$kit_dir/lib/common.sh" ] || kit_dir=""
+  PROFILE=""
+  for candidate in "$KIT_HOME_DEFAULT/share/craft.sb" "${kit_dir:+$kit_dir/share/craft.sb}" "$HOME/.local/share/craft-sandbox/craft.sb"; do
+    if [ -n "$candidate" ] && [ -f "$candidate" ]; then
+      PROFILE=$candidate
+      break
+    fi
+  done
+  [ -n "$PROFILE" ] || die "sandbox profile craft.sb not found (looked in $KIT_HOME_DEFAULT/share and next to this script)" \
+    "Re-run install.sh from the craft-claude-kit checkout, or set CRAFT_SANDBOX_PROFILE to its share/craft.sb."
+  if [ "$PROFILE" = "$HOME/.local/share/craft-sandbox/craft.sb" ]; then
+    printf 'craft-sandbox: kit profile not found, using the older profile %s\n' "$PROFILE" >&2
+  fi
+fi
+
+cd "$ROOT"
+BINDIR=$(dirname "$BIN")
+exec "$SANDBOX_EXEC" -D ROOT="$ROOT" -D HOME="$HOME_REAL" -D BIN="$BIN" -D BINDIR="$BINDIR" -f "$PROFILE" "$BIN" "$@"

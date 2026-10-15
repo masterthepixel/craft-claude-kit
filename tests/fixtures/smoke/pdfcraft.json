@@ -1,0 +1,4 @@
+[
+  {"tool": "info", "args": {}, "expect": {"isError": false, "json": {"app": "pdfcraft"}}, "note": "fixture: a real call answered"},
+  {"tool": "echo", "args": {"text": "{root}"}, "expect": {"contains": "/pdfcraft"}, "note": "fixture: second step"}
+]
