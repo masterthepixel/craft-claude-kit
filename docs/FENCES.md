@@ -38,6 +38,8 @@ five apps list the flags and the other eight list none. The mode of each app is 
 `manifest/apps.lock.json`, so a future release that adds a flag can be moved to the app's own fence by changing
 the lock.
 
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)
+
 ## Per App
 
 | App | Mode | Why | What was seen when a path was outside the folder | `doctor.sh` live probe |
@@ -56,6 +58,8 @@ the lock.
 | LightCraft | `sandbox` | None listed | `Operation not permitted` | Write, read, network, launch |
 | SoundCraft | `sandbox` | None listed (trust the `--help` of the exact version you install, not the app's documentation) | `Operation not permitted` | Write, read, network, launch |
 
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)
+
 ## Fail Closed
 
 - For `roots` and `root` apps the installer runs `<app>-cli --help` and registers the server **only** if the flag
@@ -66,6 +70,8 @@ the lock.
   profile, or the program; it never runs the program unfenced.
 - The installer also checks that the command line it computed has the workspace folder in the fence position
   before it calls `claude mcp add`.
+
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)
 
 ## Modes 1 and 2: The App's Own Flags
 
@@ -100,6 +106,8 @@ outside read or write command they tried (about a dozen, including saves, frame 
   only tested with the app folder as working directory, and the registration does not set one. The skills
   therefore tell Claude to use absolute paths only, and the MCP guard asks when WordCraft, VectorCraft or
   EffectCraft gets a relative file path, and when any save or export gets one.
+
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)
 
 ## Mode 3: The macOS Sandbox
 
@@ -203,6 +211,8 @@ ships and works on macOS 26.6.2 (the version this was verified on), but:
 - `doctor.sh` runs a live test of the sandbox on every run, so a macOS update that changes behavior shows up as a
   FAIL rather than as a surprise. Run it after every macOS update.
 
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)
+
 ## How `doctor.sh` Verifies a Fence
 
 | Check | Applies to | What it does |
@@ -234,8 +244,10 @@ to write into, or no kit file under your home folder) and nothing was allowed.
 
 The doctor's own test suite runs the live probe twice: once with the real profile (must PASS) and once with a
 profile that allows everything (must FAIL), so the check is known to be able to fail. Observed on the development
-machine (macOS 26.6.2, Apple silicon, 2026-10-14): `fence-live` PASS for all eight sandbox apps. Re-run for LightCraft and
+machine (macOS 26.6.2, Apple Silicon, 2026-10-14): `fence-live` PASS for all eight sandbox apps. Re-run for LightCraft and
 GridCraft with the Metal exception (2026-10-15): PASS, all four probes refused.
+
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)
 
 ## What Went Wrong Once, and What It Taught
 
@@ -251,6 +263,8 @@ and keep `doctor.sh --smoke` so that "the server starts" and "the server works i
 questions. Other GPU or video apps could hit a *different* member of the same class on another macOS version;
 `fence-live` would not notice (the fence would still hold), only the smoke tests would. If you see `code -11`
 anyway, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)
 
 ## Beyond the Fences
 
@@ -283,9 +297,13 @@ anyway, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 - **The apps are third-party software.** The kit pins and checksums the files it installs; it does not audit them.
   Their network behavior outside the sandbox (the five `roots`/`root` apps) is theirs.
 
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)
+
 ## Changing a Fence
 
 Edit nothing by hand in `~/.claude.json`. To use another folder, re-run `./install.sh --workspace DIR`: it
 re-registers the servers and the hooks for the new folder and leaves your files where they are. To change a mode
 for a future release, edit the `fence` field through `tools/gen-lock.sh` (the `meta()` table), regenerate the lock,
 and run `make test` and `./doctor.sh --smoke` ([UPDATING.md](UPDATING.md)).
+
+[Back to top](#fences-how-each-server-is-confined-and-what-that-does-and-does-not-guarantee)

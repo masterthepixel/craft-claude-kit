@@ -107,6 +107,8 @@ supported (the programs are macOS builds and the fences use macOS `sandbox-exec`
 message. Intel Macs and macOS 13 to 25 are expected to work (the downloads are universal and the kit uses only
 tools that ship since macOS 13) but have not been tried. See [VERIFICATION.md](VERIFICATION.md).
 
+[Back to top](#troubleshooting)
+
 ## Every Doctor Check
 
 Checks are grouped by scope: `env`, one block per app (named by the app), `skills`, `hooks`, `gui`, `legacy`. If a
@@ -176,6 +178,8 @@ check cannot run because an earlier one failed, it is a WARN that says so.
 
 If a line says `doctor_checks.py <name> crashed`, that is a bug in the kit; please report it with the output.
 
+[Back to top](#troubleshooting)
+
 ## Installer Messages
 
 The installer prints `OK`, `--` (skipped), `WARN` and `FAIL` lines. A failing app never stops the others; the summary
@@ -210,6 +214,8 @@ run it again: finished parts are skipped. The log is `~/.local/share/craft-claud
 Offline or restricted network: download the release files yourself (names as in the lock, for example
 `wordcraft-cli-0.7.0-macos-universal.zip`), put them in one folder, and pass `--offline-dir DIR`. The SHA-256 of each
 file is still checked against the lock.
+
+[Back to top](#troubleshooting)
 
 ## Messages You May See From the Apps
 
@@ -253,6 +259,8 @@ file is still checked against the lock.
   should. Re-run `install.sh` (it replaces a changed profile or wrapper), then `doctor.sh`. If it still fails after
   a macOS update, the sandbox behavior changed; please report your macOS version.
 
+[Back to top](#troubleshooting)
+
 ## Gatekeeper and macOS Prompts
 
 **Command-line programs.** The installer downloads with `curl`, which does not mark files as quarantined, so
@@ -285,6 +293,8 @@ installation was tested only with fixture disk images, not with the real ones (s
 Code may access protected folders if you put the workspace in Desktop, Documents, Downloads or iCloud Drive. Keeping
 the default `~/craft-workspace` avoids that (general macOS behavior, not specifically tested with the kit).
 
+[Back to top](#troubleshooting)
+
 ## Uninstaller
 
 | You see | Cause and fix |
@@ -300,6 +310,8 @@ the default `~/craft-workspace` avoids that (general macOS behavior, not specifi
 
 Your workspace is never deleted. To start completely fresh: `uninstall.sh`, then `./install.sh`.
 
+[Back to top](#troubleshooting)
+
 ## Reporting a Problem
 
 Open an issue (templates are in `.github/ISSUE_TEMPLATE/`) with: macOS version and chip (`sw_vers`, `uname -m`), Claude
@@ -308,3 +320,5 @@ output. `doctor.sh --json` is the most useful attachment; `~/.local/share/craft-
 contain your user name and paths: read them and replace anything private (for example `/Users/you`) before posting.
 Do not attach documents from your workspace. Problems inside an app itself belong to that app's authors:
 [APPS.md](APPS.md) links their repositories.
+
+[Back to top](#troubleshooting)

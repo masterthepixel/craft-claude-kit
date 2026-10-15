@@ -21,6 +21,8 @@ adds four things around those programs:
 
 `doctor.sh` checks all of it, and `uninstall.sh` removes only what the kit installed.
 
+[Back to top](#how-craft-claude-kit-works)
+
 ## Diagram 1: One Tool Call, End to End
 
 ```
@@ -78,6 +80,8 @@ In words:
 5. The server can read and write the app folder, and (for sandbox apps) the system temp folders, and nothing
    else that the fence covers. [FENCES.md](FENCES.md) says exactly what that means for each app.
 
+[Back to top](#how-craft-claude-kit-works)
+
 ## Diagram 2: Where the Pieces Live
 
 ```
@@ -107,6 +111,8 @@ In words:
 Everything the system needs after installation lives at the paths listed below the clone, and none of it in the clone, so
 deleting or moving your clone breaks nothing. The paths are the defaults; `--prefix`, `--workspace`, `--gui-dir`,
 `CRAFT_KIT_HOME` and `CLAUDE_CONFIG_DIR` move them.
+
+[Back to top](#how-craft-claude-kit-works)
 
 ## What Goes Where
 
@@ -141,6 +147,8 @@ render, publish or wblock) whose `path` already exists, or whose `path`/`dir` is
 printing, file and LISP commands and their aliases (a first-word or whole-word heuristic, not a parser; the
 aliases were listed by hand from the live command list).
 
+[Back to top](#how-craft-claude-kit-works)
+
 ## The Runtime Copy (`CRAFT_KIT_HOME`)
 
 `install.sh` copies the parts of the repository that must keep working after you delete or move your clone
@@ -172,6 +180,8 @@ environment. `CRAFT_KIT_HOME` must be a new or empty folder (or an earlier kit f
 `receipt.json` or `install.log`), and must not be or contain `--prefix`, the Claude Code folder or `--gui-dir`:
 the uninstaller deletes the kit's files under its fixed names (`bin`, `share`, `hooks`, `lib` ...) inside it. The installer refuses
 other folders at preflight.
+
+[Back to top](#how-craft-claude-kit-works)
 
 ## The Receipt
 
@@ -205,6 +215,8 @@ The recorded SHA-256 of each installed skill is how the next install, and the un
 since install" from "you edited it". `components` records what `--no-mcp`, `--no-skills` and `--no-hook` left out,
 so `doctor.sh` does not report those as failures. A re-run reads `workspace`, `prefix`, `guiDir` and the `apps`
 keys back, so the update command keeps your choices.
+
+[Back to top](#how-craft-claude-kit-works)
 
 ## What `install.sh` Does, in Order
 
@@ -267,6 +279,8 @@ Properties:
   program it installed (`cliSha256`) and the version of each desktop app (`guiVersion`), so the uninstaller
   removes only those exact files and bundles.
 
+[Back to top](#how-craft-claude-kit-works)
+
 ## Migration From an Older Hand-Made Setup
 
 The kit was extracted from a hand-made version of the same idea: a hook script at
@@ -280,6 +294,8 @@ old files by content (a hook script that mentions Craft and answers PreToolUse; 
 `ROOT` parameter); an unrelated file at one of those paths is kept, with a warning. `doctor.sh` reports leftovers
 (`legacy` checks) and points back to the installer. (This path is tested against a fake home that contains such
 a setup, [VERIFICATION.md](VERIFICATION.md); the author's own machine is the only real setup the migration has encountered.)
+
+[Back to top](#how-craft-claude-kit-works)
 
 ## What `doctor.sh` Does
 
@@ -298,6 +314,8 @@ it creates with a marker file and removes afterwards (also on failure or Ctrl-C)
 (one you made) is left alone and the smoke test is skipped with a WARN; a `_doctor` that is a symlink or a file is a
 FAIL and is not touched either. Every check id, what it means and how to fix it:
 [TROUBLESHOOTING.md](TROUBLESHOOTING.md). How the sandbox probe works: [FENCES.md](FENCES.md).
+
+[Back to top](#how-craft-claude-kit-works)
 
 ## What `uninstall.sh` Does
 
@@ -332,6 +350,8 @@ yours) with the `claude mcp remove` command for each, and prints `rm` commands f
 cannot attribute without the receipt. While such a server is still registered it exits 1 and does not claim
 success.
 
+[Back to top](#how-craft-claude-kit-works)
+
 ## Design Decisions
 
 - **Headless command-line apps by default.** Claude drives an engine, not a window. The desktop apps are
@@ -356,6 +376,8 @@ success.
 - **Skills carry only facts that were checked** against the live servers, and do not repeat what a server already
   says about itself ([SKILLS.md](SKILLS.md)).
 
+[Back to top](#how-craft-claude-kit-works)
+
 ## What the Kit Does Not Do
 
 It does not configure Claude Desktop or claude.ai, add permission "allow" rules, touch MCP servers it did not
@@ -363,3 +385,5 @@ create, manage project-scope or local-scope registrations, launch the desktop ap
 code, or make documents from untrusted sources safe to open. Files are data: the skills tell Claude never to
 follow instructions found inside them, which reduces but does not remove the risk of prompt injection through a
 file.
+
+[Back to top](#how-craft-claude-kit-works)

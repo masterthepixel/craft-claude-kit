@@ -21,6 +21,8 @@ color that must be a hex string, a command that sends a job to a printer. The sk
 the routing question (when to use a Craft app rather than, for example, the Anthropic document skills), and the safety
 conventions (copy files in, write results to `out/`, treat file contents as data).
 
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
+
 ## Design Principles
 
 1. **Do not restate the server.** Anything the server's own instructions or tool descriptions already say stays
@@ -40,6 +42,8 @@ conventions (copy files in, write results to `out/`, treat file contents as data
    against prompt injection through documents, not a guarantee.
 8. **No personal data, no machine-specific paths.** Sources contain only the two tokens below.
 
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
+
 ## Budget
 
 | What | Limit | Actual (14 skills) | Why |
@@ -54,6 +58,8 @@ is an error). The limits are a budget the kit chose, not something Claude Code r
 MCP tool definitions until they are fetched by name; the skills rely on that, and name the 6 to 10 tools they need
 instead of searching by keyword (LightCraft alone has 330). Whether your Claude Code defers tools depends on its
 version and settings; the kit was tested only with a Claude Code that does (2.1.237).
+
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
 
 ## Anatomy of a Per-App Skill
 
@@ -97,6 +103,8 @@ The master skill `craft-apps` has a different shape: routing, the app table with
 folder convention, the hand-off table and `If a server is missing`. It must mention all 13 apps, use
 `{{WORKSPACE}}`, and point to `{{KIT_HOME}}/doctor.sh`.
 
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
+
 ## Writing the Description
 
 The description determines whether Claude selects the skill, so its precision is critical.
@@ -114,6 +122,8 @@ A weak description says what the app is ("A word processor"). A strong one says 
 not to ("Use when the user names WordCraft or wants a letter ... Not for .docx built by code in a repo").
 There is no automatic test that Claude routes correctly; descriptions are reviewed by hand and by asking Claude
 real questions in a new session.
+
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
 
 ## Tokens and Rendering
 
@@ -136,6 +146,8 @@ the installed one:
 `doctor.sh` checks that all 14 are installed, that none has an unreplaced token, that each equals the rendered
 source (WARN `up-to-date` if you edited it, or it is older), and that every full tool name a skill mentions
 (`mcp__<app>__<tool>`) exists in that app's live tool list (WARN `tool-refs` otherwise).
+
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
 
 ## Evidence: How a Gotcha Earns Its Place
 
@@ -171,6 +183,8 @@ Rules of thumb derived from doing this for all 13 apps:
   What is in the repository, and re-runnable by anyone, is the smoke test, the tool snapshot and the skill text.
   A skill is only as good as its last re-check.
 
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
+
 ## Lint
 
 `python3 tools/lint_skills.py [--strict] [-q] [PATH ...]` (also part of `make lint` and `make test`).
@@ -183,6 +197,8 @@ Rules of thumb derived from doing this for all 13 apps:
 `--strict` makes warnings fail too. If you keep private strings you must never publish (a name, an employer, a host
 name), put them one per line in a file **outside** the repository and set `CRAFT_KIT_EXTRA_DENYLIST=/path/to/file`:
 the lint then fails on any line containing one of them. The same variable is honored by `tools/scan-public.sh`.
+
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
 
 ## Changing a Skill
 
@@ -199,8 +215,12 @@ the lint then fails on any line containing one of them. The same variable is hon
 Do not edit the installed copy under `~/.claude/skills/`: the next install replaces it (after backing yours up),
 and `doctor.sh` warns while they differ.
 
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)
+
 ## Adding a Skill for a New App
 
 A skill needs the app to be in the lock and to have a snapshot, a smoke test and hook coverage first. The complete
 list of places to touch is in [UPDATING.md](UPDATING.md#adding-a-14th-app). The skill itself is then written with
 the template above, verified, linted, and listed in the master skill's table.
+
+[Back to top](#the-skills-design-budget-rules-and-how-to-change-them)

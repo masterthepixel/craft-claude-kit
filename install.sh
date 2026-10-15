@@ -162,7 +162,7 @@ craftkit() { python3 -I "$KIT_DIR/lib/craftkit.py" "$@"; }
 
 check_tools() {
   local t
-  [ "$(uname -s)" = Darwin ] || ck_die 3 "This kit supports macOS only (13 or newer, Apple silicon or Intel)." \
+  [ "$(uname -s)" = Darwin ] || ck_die 3 "This kit supports macOS only (13 or newer, Apple Silicon or Intel)." \
     "Linux and Windows are not supported: the Craft CLIs are macOS builds and the fences use macOS sandbox-exec."
   local os_ver major
   os_ver=$(sw_vers -productVersion 2>/dev/null || echo 0)

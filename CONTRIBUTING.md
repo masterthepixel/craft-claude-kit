@@ -15,6 +15,8 @@ To report a security problem, do **not** open an issue: follow [SECURITY.md](SEC
 
 By contributing you agree that your work is released under the repository's license (see [LICENSE](LICENSE)).
 
+[Back to top](#contributing-to-craft-claude-kit)
+
 ## Set Up
 
 You need a Mac (macOS 13 or newer) because the tests use `hdiutil`, `codesign` and `sandbox-exec`. Linux can run only the skill linter and shellcheck (that is what the second CI job does).
@@ -39,6 +41,8 @@ There is no build step. `make test` takes several minutes (about 7 on the mainta
 
 You do **not** need the Craft apps to develop or to run `make test`. Tests use tiny fake archives built by `tests/fixtures/build.sh` and never download the real releases.
 
+[Back to top](#contributing-to-craft-claude-kit)
+
 ## Repository Map
 
 | Path | What it is |
@@ -56,6 +60,8 @@ You do **not** need the Craft apps to develop or to run `make test`. Tests use t
 | `tests/` | Installer, doctor and unit tests, `isolated.sh`, fixtures; `tests/smoke/<app>.json` are scripted sessions against the real servers |
 | `tools/` | `lint_skills.py`, `scan-public.sh`, `gen-lock.sh` |
 | `docs/` | Longer documents: `HOW-IT-WORKS`, `FENCES`, `SKILLS`, `APPS`, `UPDATING`, `TROUBLESHOOTING`, and `VERIFICATION` |
+
+[Back to top](#contributing-to-craft-claude-kit)
 
 ## Make Targets
 
@@ -77,6 +83,8 @@ You do **not** need the Craft apps to develop or to run `make test`. Tests use t
 
 CI (`.github/workflows/ci.yml`) runs `make test` on macOS and the skill linter plus shellcheck on Linux. Third-party GitHub Actions are pinned to a full commit SHA, with the tag in a comment; keep it that way.
 
+[Back to top](#contributing-to-craft-claude-kit)
+
 ## Running Things Safely: `tests/isolated.sh`
 
 `tests/isolated.sh COMMAND...` runs a command with a throw-away `HOME`, a fake `claude` that records every call and edits a fake `.claude.json`, the fixture lock and archives, and no usable network. Every run of `install.sh`, `uninstall.sh` or `doctor.sh` that is not `--help` or `--dry-run` goes through it:
@@ -90,6 +98,8 @@ KEEP_TEMP=1 tests/isolated.sh ./install.sh --yes       # keep the fake home to l
 Because the fixture CLIs are fakes that list two tools, doctor shows WARN lines about drift and tool references in that environment. That is expected there.
 
 `./install.sh --dry-run` changes nothing, so it is safe on your real machine, and a good way to see the plan.
+
+[Back to top](#contributing-to-craft-claude-kit)
 
 ## Tests
 
@@ -106,6 +116,8 @@ Python tests run as scripts (`python3 hooks/tests/test_mcp_guard.py -k save` run
 
 When you fix a bug, add the case that would have caught it. When you change a hook, add both a "must ask" and a "must stay silent" case. A test that cannot fail proves nothing: when you write a smoke test, also run it once with a deliberately wrong expectation and check that it fails.
 
+[Back to top](#contributing-to-craft-claude-kit)
+
 ## Style
 
 - **Shell:** `#!/usr/bin/env bash`, `set -euo pipefail`, bash 3.2 only (`make bash32` greps for the usual offenders; with `set -u` an empty array needs the `${arr[@]+"${arr[@]}"}` form), shellcheck clean, quote everything, absolute paths for anything destructive. Comments explain *why*, not what.
@@ -114,6 +126,8 @@ When you fix a bug, add the case that would have caught it. When you change a ho
 - **Messages for users:** say what happened, then the fix, in one line each (`FAIL ...` then `fix: ...`). No jargon without a clue.
 - **Docs:** short sentences, concrete commands you have run, no marketing words. Do not describe a control by its intent; describe its guarantee and its limit. No emoji.
 - **Commits:** a clear imperative subject, one logical change each.
+
+[Back to top](#contributing-to-craft-claude-kit)
 
 ## Skills
 
@@ -131,6 +145,8 @@ python3 lib/mcp_probe.py --app wordcraft --workspace "$WS" run tests/smoke/wordc
 
 The probe needs the app's command-line tool in `~/.local/bin` (or `--prefix DIR`). Check the failure cases as well as the success: what the server says for a bad path, a missing folder, a `~` path, a save without `path`. Never aim the probe at your real workspace, and never launch the desktop apps.
 
+[Back to top](#contributing-to-craft-claude-kit)
+
 ## Propose a New App
 
 Open an issue first. The kit can support a Craft app when all of this is true:
@@ -141,9 +157,13 @@ Open an issue first. The kit can support a Craft app when all of this is true:
 
 The app list is repeated in about a dozen files, and the complete checklist is in [docs/UPDATING.md](docs/UPDATING.md#adding-a-14th-app). A pull request that adds an app without its skill, snapshot, smoke test and hook review will be sent back.
 
+[Back to top](#contributing-to-craft-claude-kit)
+
 ## Propose a Version Bump
 
 The lock pins the versions the kit has been checked against, so a bump is a re-check, not a one-line change. The procedure (edit `manifest/pins.txt`, `make lock`, install into a throw-away place, `make snapshot`, re-check the skills, the hook table and the fence flags, smoke tests, changelog) is in [docs/UPDATING.md](docs/UPDATING.md#for-maintainers-moving-the-pins). In the pull request say what you ran and what you saw. "Bumped, tests pass" is not enough for an app: a fence regression would not show up in `make test`. Never edit `manifest/apps.lock.json` by hand.
+
+[Back to top](#contributing-to-craft-claude-kit)
 
 ## Pull Request Checklist
 
@@ -159,6 +179,10 @@ The pull request template lists the same items; the short version:
 - [ ] Docs and `CHANGELOG.md` are updated when behavior changes.
 - [ ] New GitHub Actions, if any, are pinned to a commit SHA.
 
+[Back to top](#contributing-to-craft-claude-kit)
+
 ## Getting Help
 
 Open an issue with the output of `./doctor.sh` (personal paths replaced by `/Users/you`). This is a volunteer project; courteous communication is expected.
+
+[Back to top](#contributing-to-craft-claude-kit)

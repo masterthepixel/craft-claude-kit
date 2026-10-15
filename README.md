@@ -2,20 +2,38 @@
 
 > **Unofficial community project.** Not affiliated with, endorsed by or supported by Anthropic or the authors of the Craft apps (storytold). "Claude" and "Craft" appear only to say what the kit works with.
 
-Give Claude Code the 13 [Craft apps](https://github.com/storytold): a word processor, spreadsheet, presentations, PDF editor, image editor, vector drawing, page layout, CAD, interface design, video editing, motion graphics, raw photo developer and audio workstation. One command downloads them, checks them, plugs each into Claude Code as an MCP server that can only touch its own folder (MCP, the Model Context Protocol, is how Claude Code talks to outside tools), and installs the skills that teach Claude how to use them.
+Give Claude Code the 13 [Craft apps](https://github.com/storytold): word processor, spreadsheet, slides, PDF, image, vector drawing, page layout, CAD, interface design, video, motion graphics, raw photos and audio.
 
-You need macOS 13 or newer with the Claude Code CLI (`claude`) installed; the installer checks both and says how to fix a miss.
+One command downloads and checks them, plugs each into Claude Code as an MCP server fenced to its own folder, and installs the skills that teach Claude to use them.
+
+Contents: [Quick start](#quick-start) | [What you get](#what-you-get) | [Requirements](#requirements) | [Install options](#install-options) | [Download sizes](#download-sizes) | [First Steps](#first-things-to-try) | [Verify](#verify) | [Update](#update) | [Uninstall](#uninstall) | [Platforms](#supported-platforms) | [Security](#security) | [Testing](#what-has-and-has-not-been-tested) | [FAQ](#faq) | [License](#license)
+
+---
+
+## Quick Start
+
+**You need** macOS 13 or newer and the Claude Code CLI (`claude`). The installer checks both and says how to fix a miss.
+
+**1. Install**
 
 ```sh
 git clone https://github.com/masterthepixel/craft-claude-kit.git
 cd craft-claude-kit && ./install.sh
-# open a NEW Claude Code session (servers and skills load at start-up), then:
+```
+
+**2. Open a new Claude Code session.** Servers and skills load at start-up, so a session that was already open will not see them.
+
+**3. Check that it worked**
+
+```sh
 ~/.local/share/craft-claude-kit/doctor.sh
 ```
 
 `install.sh` shows a plan first (what it will download, where it will write, which Claude Code settings it will touch), asks once, and changes nothing until you say yes. It is safe to run again: it repairs what is missing and skips what is up to date. macOS only. Unofficial: see [Not affiliated](#not-affiliated).
 
-Contents: [What you get](#what-you-get) | [Requirements](#requirements) | [Install options](#install-options) | [Download sizes](#download-sizes) | [First Steps](#first-things-to-try) | [Verify](#verify) | [Update](#update) | [Uninstall](#uninstall) | [Platforms](#supported-platforms) | [Security](#security) | [Testing](#what-has-and-has-not-been-tested) | [FAQ](#faq) | [License](#license)
+[Back to top](#craft-claude-kit)
+
+---
 
 ## What You Get
 
@@ -26,6 +44,7 @@ Contents: [What you get](#what-you-get) | [Requirements](#requirements) | [Insta
 - **`doctor.sh`**, which checks all of it, and **`uninstall.sh`**, which removes only what the kit installed.
 
 Terms used below:
+- **MCP** (Model Context Protocol): how Claude Code talks to outside tools. Each Craft app is registered as one MCP server.
 - **receipt**: `receipt.json`, the file `install.sh` writes listing what it installed (with checksums); `doctor.sh` and `uninstall.sh` read it.
 - **fence**: the limit on which folder an app's server may touch (see [Security](#security) and [docs/FENCES.md](docs/FENCES.md)).
 - **craft-sandbox**: the wrapper that runs a sandboxed app under macOS `sandbox-exec` with the profile `share/craft.sb`; installed into the `--prefix` folder (default `~/.local/bin`).
@@ -49,13 +68,17 @@ Terms used below:
 | LightCraft | Raw photo library and developing | macOS sandbox |
 | SoundCraft | Multitrack audio | macOS sandbox |
 
+[Back to top](#craft-claude-kit)
+
 ## Requirements
 
-- A Mac running **macOS 13 or newer** (Apple silicon or Intel).
+- A Mac running **macOS 13 or newer** (Apple Silicon or Intel).
 - **Claude Code** installed and working (`claude --version`). Claude Desktop and claude.ai are not supported. The installer needs the `claude` command to register the servers; `--no-mcp` skips both the check and the registration.
 - Tools the installer checks for first, each with a fix hint if missing: `curl`, `unzip`, `shasum` (ship with macOS), `python3` 3.9 or newer (`xcode-select --install`), `jq` (included in macOS 15 and newer; otherwise `brew install jq`), `/usr/bin/sandbox-exec` (ships with macOS). With `--gui` also `hdiutil` and `ditto` (ship with macOS).
 - An internet connection to `github.com` during install, and free disk space: see [Download sizes](#download-sizes).
 - No `sudo` (the scripts refuse to run as root). The kit itself needs no Node, Docker or Homebrew packages (apart from `jq` on macOS 14 and older).
+
+[Back to top](#craft-claude-kit)
 
 ## Install Options
 
@@ -101,6 +124,8 @@ Where things go:
 | Hooks | two `PreToolUse` entries in `~/.claude/settings.json` (one timestamped backup per run, made before the first change) |
 | Desktop apps (only with `--gui`) | `/Applications` or `~/Applications` |
 
+[Back to top](#craft-claude-kit)
+
 ## Download Sizes
 
 The installer downloads each file from the official GitHub release and refuses it unless its SHA-256 matches the one pinned in [`manifest/apps.lock.json`](manifest/apps.lock.json).
@@ -124,6 +149,8 @@ The installer downloads each file from the official GitHub release and refuses i
 
 Sizes are decimal megabytes, as GitHub shows them. Unpacked, the 13 command-line programs took about 1.7 GB on the machine this was developed on, and the 13 desktop apps about 2 GB. The plan warns you if free space looks too low. A program the kit verified and installed earlier (same SHA-256 as recorded in the receipt) is skipped, so a re-run downloads nothing. A program of that name that the kit did not install, or that changed since, is replaced by the verified download (marked `replace*` in the plan), and it is not run before that. A download that stalls (under 1 KB/s for a minute) fails and is retried.
 
+[Back to top](#craft-claude-kit)
+
 ## First Things to Try
 
 Open a new Claude Code session and ask in plain words. Naming the app helps, and Claude also picks one when the task is clearly a document, spreadsheet, PDF and so on.
@@ -133,6 +160,8 @@ Open a new Claude Code session and ask in plain words. Naming the app helps, and
 3. *"I want to merge two PDFs. Ask me before copying ~/Downloads/a.pdf and ~/Downloads/b.pdf into PdfCraft's folder, then merge them into one file."*
 
 How files move: an app can only see `~/craft-workspace/<app>/`. To work on one of your files, Claude asks to **copy** it into that app's `in/` folder (it never moves it). Results are written to `out/` as `<name>-YYYYMMDD-HHMM.<ext>`, and Claude tells you the full path. It never saves over an input.
+
+[Back to top](#craft-claude-kit)
 
 ## Verify
 
@@ -157,6 +186,8 @@ Inside a Claude Code session, `/mcp` lists the servers.
 
 A `WARN drift` line means the installed program's tool list differs from the one the kit recorded. It is information, not a failure. `--smoke` writes only inside `~/craft-workspace/<app>/_doctor/`, a folder it creates, marks and removes afterwards; it leaves alone a `_doctor` folder it did not create.
 
+[Back to top](#craft-claude-kit)
+
 ## Update
 
 ```sh
@@ -166,6 +197,8 @@ cd craft-claude-kit && git pull && ./install.sh
 A re-run uses the same workspace, `--prefix`, `--gui-dir` and app selection as before (see [Install options](#install-options)). It upgrades any app whose installed version differs from the version this kit pins, re-registers servers whose command line differs, refreshes the skills (a skill you edited is first copied to `SKILL.md.bak-<timestamp>`), re-registers the hooks and refreshes the runtime copy. Nothing updates in the background. The kit installs the versions it was verified against, not "latest": new upstream releases arrive when a new kit release re-pins them.
 
 Desktop apps that are already installed at another version are left alone, with a warning. To switch, quit the app, move it to the Trash yourself and re-run with `--gui`.
+
+[Back to top](#craft-claude-kit)
 
 ## Uninstall
 
@@ -178,9 +211,13 @@ It reads the receipt the installer wrote and removes only what the kit owns: MCP
 
 Deleted `~/.local/share/craft-claude-kit` by hand? Run `./uninstall.sh` from your clone. Without the receipt it removes what clearly belongs to the kit (its hook entries, its `craft-sandbox` and the MCP servers that run through it) and lists, with the commands to remove them, the MCP servers that point into the programs folder, the skills and the programs it cannot attribute; it exits 1 while such a server is still registered. It finds the programs folder from the registrations; pass `--prefix DIR` if that fails. A symlinked kit folder (for example a dotfiles-managed `~/.local`) is handled; the clone's `uninstall.sh` always works. Until then the hooks do no harm: their command ends in `|| true`, so a missing script never blocks a tool call. For a complete removal, run `./install.sh` first (it restores the receipt), then the uninstaller.
 
+[Back to top](#craft-claude-kit)
+
 ## Supported Platforms
 
-**macOS 13 or newer only**, Apple silicon or Intel (the Craft downloads are "macos-universal" builds). It will not work on Linux or Windows: the programs are macOS builds and the fences use macOS `sandbox-exec`. The installer stops with a clear message on other systems. It targets **Claude Code** (the `claude` command line tool); it does not configure Claude Desktop.
+**macOS 13 or newer only**, Apple Silicon or Intel (the Craft downloads are "macos-universal" builds). It will not work on Linux or Windows: the programs are macOS builds and the fences use macOS `sandbox-exec`. The installer stops with a clear message on other systems. It targets **Claude Code** (the `claude` command line tool); it does not configure Claude Desktop.
+
+[Back to top](#craft-claude-kit)
 
 ## Security
 
@@ -194,13 +231,15 @@ The short version: each server is confined to one folder, the installer only fet
 - **Files are data.** The skills tell Claude to treat text inside opened documents as data, never as instructions. That lowers the risk of prompt injection through a file; it does not remove it.
 - **Attribution.** WordCraft is registered with `--author Claude`, so tracked changes and comments it makes are labelled.
 
+[Back to top](#craft-claude-kit)
+
 ## What Has and Has Not Been Tested
 
 | Tested | How |
 |---|---|
 | Installer, uninstaller, doctor, hooks, helpers | Automated tests (`make test`), run in a throw-away fake home with a fake `claude` and tiny fake downloads. They never touch your real Claude config. |
-| The 13 servers | Driven for real, one at a time, at the pinned versions, on one Apple silicon Mac running macOS 26: tool lists recorded in `data/tools/`, skill claims checked against the live server, and each app's smoke test (`tests/smoke/<app>.json`, 6 to 10 steps) passes under the shipped sandbox profile (13 of 13, re-run on 2026-10-15; see [docs/VERIFICATION.md](docs/VERIFICATION.md)). |
-| A first install on a clean account | Run once, on a new macOS user account with no dotfiles and no Claude Code (macOS 26.6.2, Apple silicon, 2026-10-15): the real downloads for all 13 command-line apps and all 13 desktop apps installed, skills and hooks registered, `doctor.sh --smoke` passed, a second run changed nothing, and `uninstall.sh` removed what the kit installed. That account had no Claude Code, so it used `--no-mcp`. |
+| The 13 servers | Driven for real, one at a time, at the pinned versions, on one Apple Silicon Mac running macOS 26: tool lists recorded in `data/tools/`, skill claims checked against the live server, and each app's smoke test (`tests/smoke/<app>.json`, 6 to 10 steps) passes under the shipped sandbox profile (13 of 13, re-run on 2026-10-15; see [docs/VERIFICATION.md](docs/VERIFICATION.md)). |
+| A first install on a clean account | Run once, on a new macOS user account with no dotfiles and no Claude Code (macOS 26.6.2, Apple Silicon, 2026-10-15): the real downloads for all 13 command-line apps and all 13 desktop apps installed, skills and hooks registered, `doctor.sh --smoke` passed, a second run changed nothing, and `uninstall.sh` removed what the kit installed. That account had no Claude Code, so it used `--no-mcp`. |
 | Fences | Sandbox refusals (writing outside the folder, reading your home folder, using the network, starting a program through macOS) were observed on real sandboxed servers during development. `doctor.sh` repeats the test on your machine. |
 
 | Not tested yet | Notes |
@@ -211,6 +250,8 @@ The short version: each server is confined to one folder, the installer only fet
 | Newer upstream releases | The kit pins versions; a new release can change tool names or behaviour. `doctor.sh` shows drift. |
 
 Known limits: the servers are headless, so window tools (`click`, `key`, `pointer`, `ui_*`, and `screenshot` in WordCraft, DesignCraft, DeckCraft, GridCraft and SoundCraft) do not work; most apps have a render or preview tool that does (GridCraft is read back with `read_range`, SoundCraft checked with `bounce_mix`). The sandbox has no network, so the apps' live-window modes (`--connect`, `--bridge`) are not used, by design. On the pinned PdfCraft 0.8.0, OCR reports itself unavailable. Details and evidence: [docs/VERIFICATION.md](docs/VERIFICATION.md).
+
+[Back to top](#craft-claude-kit)
 
 ## FAQ
 
@@ -234,18 +275,28 @@ Known limits: the servers are headless, so window tools (`click`, `key`, `pointe
 
 **Install said something failed.** One app failing never stops the others. The summary lists what failed, with a fix for each; fix it and re-run, and finished parts are skipped. The log is `~/.local/share/craft-claude-kit/install.log`.
 
+[Back to top](#craft-claude-kit)
+
 ## Alpha Software
 
 The Craft apps describe themselves as alpha or early-development software (it depends on the app), and this kit inherits their maturity: expect rough edges, and expect upstream behaviour to change quickly (new releases often arrive daily). The kit pins the versions it was verified against, so you stay on a known-good set until you choose to update. See [docs/VERIFICATION.md](docs/VERIFICATION.md) for exactly what was tested.
+
+[Back to top](#craft-claude-kit)
 
 ## Not Affiliated
 
 craft-claude-kit is an independent community project. It is **not affiliated with, endorsed by or supported by** the authors of the Craft apps ([storytold](https://github.com/storytold)) or by Anthropic. It does not contain or redistribute their software: the installer downloads it from the official GitHub releases. Product names belong to their owners and are used only to say what works with what. Report problems in an app to its authors; report problems with the install, skills or hooks here.
 
+[Back to top](#craft-claude-kit)
+
 ## Contributing
 
 Bug reports and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). `make test` runs everything locally without touching your real setup. The skills' format rules are in [skills/README.md](skills/README.md). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
+[Back to top](#craft-claude-kit)
+
 ## License
 
 The kit is [MIT licensed](LICENSE). The Craft apps it installs are dual-licensed MIT OR Apache-2.0 by their authors, and are not part of this repository: see [NOTICE.md](NOTICE.md).
+
+[Back to top](#craft-claude-kit)

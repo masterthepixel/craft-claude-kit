@@ -32,7 +32,7 @@ repository does keep, and what you can re-run, is the smoke test, the tool snaps
 |---|---|---|
 | The kit's own code: installer, uninstaller, doctor, hooks, helpers | Every step of `make test` passes in a fake home: 51 hook tests, 143 helper tests, 147 doctor checks, 56 installer and uninstaller cases (578 checks), 77 tool tests (section 1; run of 2026-10-15) | Automated |
 | Same, with only the stock macOS toolchain (Python 3.9.6, jq 1.7.1, bash 3.2) | Passes (section 8) | Automated, run once |
-| A real first install of the real downloads on a clean Mac | Run once, on a new macOS standard-user account with no dotfiles and no Claude Code (macOS 26.6.2, Apple silicon, 2026-10-15), installed with `--no-mcp`: all 13 command-line apps and all 13 desktop apps downloaded, matched their SHA-256 and passed `codesign`; 14 of 14 skills and both hooks registered; `doctor.sh` and `doctor.sh --smoke` passed except the missing Claude Code CLI; a second run changed nothing; `uninstall.sh` left only the workspace and the desktop apps. This run found and fixed the desktop-app signature failure (see CHANGELOG). **Not covered:** MCP registration against a real Claude Code, Intel, macOS 13 to 25 | Run by hand, once |
+| A real first install of the real downloads on a clean Mac | Run once, on a new macOS standard-user account with no dotfiles and no Claude Code (macOS 26.6.2, Apple Silicon, 2026-10-15), installed with `--no-mcp`: all 13 command-line apps and all 13 desktop apps downloaded, matched their SHA-256 and passed `codesign`; 14 of 14 skills and both hooks registered; `doctor.sh` and `doctor.sh --smoke` passed except the missing Claude Code CLI; a second run changed nothing; `uninstall.sh` left only the workspace and the desktop apps. This run found and fixed the desktop-app signature failure (see CHANGELOG). **Not covered:** MCP registration against a real Claude Code, Intel, macOS 13 to 25 | Run by hand, once |
 | The 13 servers start, list tools and do real work | 13 of 13 smoke tests pass (101 steps, 2026-10-15, LightCraft after the Metal fix in section 2); each also fails when made to | Automated (`doctor.sh --smoke`) |
 | Statements in the 14 skills | 439 checked against the live servers, 94 corrected, as counted by the per-app checking agents (their logs are not in the repository, so the figures cannot be traced line by line); explicit "not verified" markers remain | Run by hand |
 | Sandbox fence, 8 apps | Refuses write, read, network and starting a program through macOS on this Mac; re-tested by `doctor.sh` on yours | Automated probe, plus run by hand |
@@ -44,9 +44,11 @@ repository does keep, and what you can re-run, is the smoke test, the tool snaps
 | Which skill Claude picks for a request ("routing") | **not measured** | Not verified |
 | What a hook's "ask" does in every Claude Code permission mode | **not tested** | Not verified |
 
+[Back to top](#what-has-been-verified-and-what-has-not)
+
 ## 1. The Kit Itself
 
-`make test` was last run on 2026-10-15 (macOS 26.6.2, Apple silicon, the developer's own Python and jq, not under CI, fixtures built by the tests themselves; 0 checks skipped) and every step passed. It never touches the real home folder: the installer
+`make test` was last run on 2026-10-15 (macOS 26.6.2, Apple Silicon, the developer's own Python and jq, not under CI, fixtures built by the tests themselves; 0 checks skipped) and every step passed. It never touches the real home folder: the installer
 tests run inside `tests/isolated.sh` (a fresh fake home, a fake `claude` that records its calls, tiny fake
 downloads with correct checksums, and proxies pointing at a closed port so an accidental download fails at once).
 
@@ -72,6 +74,8 @@ only mimics them, and neither the tests nor this review ran the real commands; t
 extracted from used command lines of the same shape); that the desktop disk images mount and verify; and anything
 about a clean Mac. The GitHub Actions workflow in `.github/workflows/ci.yml` had not run when this was written,
 because the repository had not been pushed.
+
+[Back to top](#what-has-been-verified-and-what-has-not)
 
 ## 2. The 13 Servers
 
@@ -141,6 +145,8 @@ Notes on reading the table:
   `ocr_status` reports `available: false` and `ocr_recognize` fails with "the text recognition models are not
   installed". The kit does not claim OCR.
 
+[Back to top](#what-has-been-verified-and-what-has-not)
+
 ## 3. The Fences
 
 ### 3.1 The macOS Sandbox (GridCraft, DeckCraft, DesignCraft, CADCraft, FigCraft, FilmCraft, LightCraft, SoundCraft)
@@ -174,6 +180,8 @@ not restrict; channels the flags do not cover (WordCraft's documentation mention
 Zotero commands); how relative paths resolve when the server is started by Claude Code (the registration sets no
 working directory, the probe used the app folder), which is why the skills use absolute paths.
 
+[Back to top](#what-has-been-verified-and-what-has-not)
+
 ## 4. The Skills
 
 Each factual sentence in a per-app skill was checked against the running server in a scratch workspace: 439
@@ -204,6 +212,8 @@ Not verified:
   against hostile files.
 - **Freshness.** Everything above holds for the pinned versions. A skill is only as good as its last re-check
   ([UPDATING.md](UPDATING.md)).
+
+[Back to top](#what-has-been-verified-and-what-has-not)
 
 ## 5. The Hooks
 
@@ -242,6 +252,8 @@ snapshot. The table remains incomplete by design; the fences, not the hooks, are
 Not verified: what an "ask" does when Claude Code runs in a permission mode that skips or automates prompts (the
 kit's tests do not drive Claude Code); that Claude Code runs the hooks with a 10-second timeout as configured.
 
+[Back to top](#what-has-been-verified-and-what-has-not)
+
 ## 6. Pinning and Downloads
 
 | What | Evidence | Level |
@@ -254,6 +266,8 @@ kit's tests do not drive Claude Code); that Claude Code runs the hooks with a 10
 Not verified: notarization of the command-line programs; whose signature the desktop apps carry (the installer checks
 that it is valid, not whose it is). On the clean account `spctl` accepted all 13 desktop apps, and the real disk images
 revealed the extended-attribute problem that the fixtures had missed (fixed; see the CHANGELOG).
+
+[Back to top](#what-has-been-verified-and-what-has-not)
 
 ## 7. What Is Not Verified, in One List
 
@@ -272,6 +286,8 @@ revealed the extended-attribute problem that the fixtures had missed (fixed; see
 - The GitHub Actions workflow (not yet run). `shellcheck` was run once locally at warning level and was clean.
 - Memory and CPU use of 13 servers across several Claude Code sessions.
 - Anything about app versions other than the pinned ones.
+
+[Back to top](#what-has-been-verified-and-what-has-not)
 
 ## 8. Re-Running It Yourself
 
@@ -297,3 +313,5 @@ minutes that time). `shellcheck` was skipped there too.
 
 Incorrect statements, and checks that pass when they should not, are welcome as issues;
 a false assurance is treated as a vulnerability ([SECURITY.md](../SECURITY.md)).
+
+[Back to top](#what-has-been-verified-and-what-has-not)

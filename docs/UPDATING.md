@@ -44,6 +44,8 @@ Notes:
   skills' statements (checked on the pinned version) may be wrong for it.
 - A changelog of kit releases is in [CHANGELOG.md](../CHANGELOG.md).
 
+[Back to top](#updating)
+
 ## For Maintainers: Moving the Pins
 
 Everything is driven by `manifest/pins.txt` (one `app version` per line) and the lock `manifest/apps.lock.json`
@@ -204,6 +206,8 @@ kit's; about 819 MB for all 13), `uninstall.sh` keeps the programs (no checksum 
 with `--remove-gui`, keeps the desktop apps (no recorded version), and `doctor.sh` WARNs that the checksums are
 missing.
 
+[Back to top](#updating)
+
 ## Adding a 14th App
 
 The installer and the doctor read the app list from the lock, and the uninstaller reads the receipt plus
@@ -226,6 +230,8 @@ Run `make test` and fix what the tests point out; the "13" in prose (README, doc
 Retiring an app is the same list in reverse; its users need an `uninstall`-style note in the changelog, because the
 installer does not remove programs for apps that left the lock.
 
+[Back to top](#updating)
+
 ## When Upstream Changes Something Under You
 
 | What changed | What you will see | What to do |
@@ -236,3 +242,5 @@ installer does not remove programs for apps that left the lock.
 | A tool was renamed or removed | `make lint-skills` errors; `doctor.sh` WARNs `drift` and `tool-refs` | Update the skills and the snapshot |
 | A program crashes under the sandbox profile | Smoke tests fail with `code -11` or similar | See [FENCES.md](FENCES.md#what-went-wrong-once-and-what-it-taught); loosen the profile as little as possible and add a smoke step that would have caught it |
 | Apple changes `sandbox-exec` | `doctor.sh` FAILs `sandbox-exec` or `fence-live` | [FENCES.md](FENCES.md#sandbox-exec-is-deprecated) |
+
+[Back to top](#updating)

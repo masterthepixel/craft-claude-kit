@@ -53,6 +53,8 @@ loudness a bounce reports. A few "window-only" tools turned out to run headless 
 and `pointer`, DesignCraft's `pointer` and `select_tool`), and some succeed without doing anything (VectorCraft's
 `press_key`, SoundCraft's `transport.play`); each app's skill lists what was observed.
 
+[Back to top](#the-13-apps)
+
 ## Behaviors Shared by Most Apps
 
 Found app after app while the skills were checked; each skill states
@@ -73,6 +75,8 @@ the app-specific form.
 - **Not run during verification** (printing, scripts, plug-ins, passwords, downloads, deleting for good): they are
   listed under `Never` in each skill, with the reason, and several are on the MCP guard's ask list.
 
+[Back to top](#the-13-apps)
+
 ## WordCraft 0.7.0 (Skill `craft-wordcraft`)
 
 Documents in `.docx`; also saves `.pdf`, `.odt`, `.rtf`, `.html`, `.md`, `.tex`, `.txt`, `.png`. Registered with
@@ -84,6 +88,8 @@ Documents in `.docx`; also saves `.pdf`, `.odt`, `.rtf`, `.html`, `.md`, `.tex`,
 - Colors must be `RRGGBB`, `#RRGGBB` or `auto`; arrays are rejected.
 - `batch` with `keepGoing` returns `isError: false` even if a command failed.
 - Not run: printing, sharing, macros, encryption and protection commands.
+
+[Back to top](#the-13-apps)
 
 ## GridCraft 0.7.0 (`craft-gridcraft`)
 
@@ -97,6 +103,8 @@ Spreadsheets in `.xlsx`; saves `.csv`, `.tsv`, `.json`, `.html`; PDF through `fi
   not as a tool error.
 - Not run: printing, opening links, automation scripts, sheet protection, undo after deleting a sheet.
 
+[Back to top](#the-13-apps)
+
 ## DeckCraft 0.7.0 (`craft-deckcraft`)
 
 Presentations in `.pptx` or `.deckcraft`; exports PDF, PNG, JPEG, outline.
@@ -107,6 +115,8 @@ Presentations in `.pptx` or `.deckcraft`; exports PDF, PNG, JPEG, outline.
 - `go_to_slide` clamps an out-of-range index; `inspect_slide` errors.
 - `call_app` (a raw desktop control call) bypasses the typed tools and is on the guard's ask list.
 - Not run: discarding recovery files, charts other than column and pie.
+
+[Back to top](#the-13-apps)
 
 ## PdfCraft 0.8.0 (`craft-pdfcraft`)
 
@@ -121,6 +131,8 @@ widest surface after LightCraft.
 - **OCR is unavailable on the pinned version**: `ocr_status` reports `available: false` and `ocr_recognize` fails with
   "the text recognition models are not installed". Do not count on OCR.
 - Not run: printing, following links, JavaScript, passwords, digital signatures, removing hidden information.
+
+[Back to top](#the-13-apps)
 
 ## PhotoCraft 0.9.0 (`craft-photocraft`)
 
@@ -137,6 +149,8 @@ Raster editing with layers, masks, filters and adjustments: `.psd`, `.pcraft` (n
 - A job started with `wait: false` blocks edits to that document until it finishes or `jobs_cancel`.
 - `ui_*` and `control_call` need the desktop app (bridge mode).
 
+[Back to top](#the-13-apps)
+
 ## VectorCraft 0.11.0 (`craft-vectorcraft`)
 
 Vector artwork: `.svg`, `.pdf`, `.png` and the native `.vectorcraft`. A fresh server starts with an untitled
@@ -149,6 +163,8 @@ Vector artwork: `.svg`, `.pdf`, `.png` and the native `.vectorcraft`. A fresh se
 - `add_text` can report `overflow: true`, and `fit: "shrinkText"` still overflowed in a test.
 - 749 command ids sit behind `command_run`; `file.print` is enabled and was not run.
 
+[Back to top](#the-13-apps)
+
 ## DesignCraft 0.8.0 (`craft-designcraft`)
 
 Print layout in `.designcraft`; exports `.png`, `.jpg`, and PDF.
@@ -158,6 +174,8 @@ Print layout in `.designcraft`; exports `.png`, `.jpg`, and PDF.
 - `place_image` without `frame` reuses the selected empty frame, so a second call can return the first id.
 - `save_document` without `path` overwrites an opened file; on a new document it fails.
 - Picture formats: PNG, JPEG, WebP, GIF, TIFF. Not run: printing, packaging, scripts, relinking.
+
+[Back to top](#the-13-apps)
 
 ## CADCraft 0.7.0 (`craft-cadcraft`)
 
@@ -170,6 +188,8 @@ Print layout in `.designcraft`; exports `.png`, `.jpg`, and PDF.
 - Plot, publish, LISP, `wblock`, `purge` and `overkill` were not run; the MCP guard does not ask about `PLOT` typed
   into `command_line`.
 
+[Back to top](#the-13-apps)
+
 ## FigCraft 0.6.0 (`craft-figcraft`)
 
 Interface design with frames, auto layout, components and prototyping, in the native `.figcraft` format (a zip with
@@ -179,6 +199,8 @@ Interface design with frames, auto layout, components and prototyping, in the na
 - `save_file` with a `path` is a save-as and leaves the opened file alone; without `path` it overwrites it.
 - `screenshot` works headless. `key` runs menu shortcuts and can have unexpected effects; use `run_command`.
 - Plugin, widget and network (`collab.*`, library publishing) commands are on the Never list.
+
+[Back to top](#the-13-apps)
 
 ## FilmCraft 0.8.0 (`craft-filmcraft`)
 
@@ -194,6 +216,8 @@ memory until saved.
 - H.264, ProRes and WAV exports ran; `hevc` fails with "no encoder registered"; other formats were not run.
   `ui_*` tools need the live window.
 
+[Back to top](#the-13-apps)
+
 ## EffectCraft 0.10.0 (`craft-effectcraft`)
 
 Motion graphics in `.ecproj`: compositions, text and solid layers, keyframes, effects; renders PNG frames. Only the
@@ -206,6 +230,8 @@ headless CPU renderer was used.
 - Script commands (`run_script`, `script.run`, `file.runScript`, `script_ui`) are refused under the fence.
 - Only PNG footage was imported; other formats are untested. `file.import` of a missing file reports it in `errors`
   and leaves `isError` false. `footage.relink` also relinks the other missing files it finds in the same place.
+
+[Back to top](#the-13-apps)
 
 ## LightCraft 0.8.0 (`craft-lightcraft`)
 
@@ -221,6 +247,8 @@ Raw and JPEG photo library and developer: import, query, develop, crop, rate, ex
 - The MCP server cannot create an image, so the smoke test checks GPU setup and a keyword round trip rather than a
   render. Raw decoding was not tested (no raw sample).
 
+[Back to top](#the-13-apps)
+
 ## SoundCraft 0.7.0 (`craft-soundcraft`)
 
 A digital audio workstation: import audio, edit, mix, bounce, save `.scraft` sessions.
@@ -234,6 +262,8 @@ A digital audio workstation: import audio, edit, mix, bounce, save `.scraft` ses
 - Window-only: `screenshot`, `ui_inspect`, `ui_set`, `menu_invoke`, `click`, `drag`, `key` (they fail with "needs the
   desktop app"). The sandbox refuses reads under the home folder only; system paths stay readable.
 
+[Back to top](#the-13-apps)
+
 ## Where These Facts Come From
 
 Each list above is a digest of that app's skill: statements marked "verified" there were produced by driving the
@@ -241,3 +271,5 @@ real server with `lib/mcp_probe.py` in a scratch folder at the version shown; st
 not run say "not run" or "(not verified on vX.Y.Z)". Newer releases of an app can change any of it; the lock pins
 the versions these facts were checked on. How the checks were done and what is still open:
 [VERIFICATION.md](VERIFICATION.md).
+
+[Back to top](#the-13-apps)

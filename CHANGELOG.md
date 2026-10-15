@@ -84,7 +84,7 @@ First release.
 
 ### Known Limitations
 
-- macOS 13 or newer only. Verified on one Apple silicon Mac running macOS 26; Intel Macs and macOS 13 to 25 have not been tried.
+- macOS 13 or newer only. Verified on one Apple Silicon Mac running macOS 26; Intel Macs and macOS 13 to 25 have not been tried.
 - A first install of the real downloads on a clean machine has not been run; the download path is covered by local fixtures.
 - The servers are headless: window tools (`click`, `key`, `pointer`, `ui_*`, and `screenshot` in WordCraft, DesignCraft, DeckCraft, GridCraft and SoundCraft) do not work. Live-window modes (`--connect`, `--bridge`) are not used.
 - `sandbox-exec` is deprecated by Apple. It works on current macOS and may be removed later.

@@ -32,6 +32,8 @@ What is not in scope:
 
 This is a volunteer project. The maintainers aim to acknowledge a report within 7 days and will communicate their decision; there are no guaranteed fix times and no bounty. Reporters are asked to allow a reasonable period (90 days is suggested) before publishing details. Reporters are credited in the advisory on request.
 
+[Back to top](#security-policy)
+
 ## Supported Versions
 
 | Version | Supported |
@@ -39,9 +41,11 @@ This is a volunteer project. The maintainers aim to acknowledge a report within 
 | The latest release, and `main` | Yes |
 | Anything older | No (the project is pre-1.0; fixes are not backported) |
 
-Platform: macOS 13 or newer, Apple silicon or Intel. The preflight refuses everything else. The maintainers have tested only macOS 26.6.2 on Apple silicon (October 2026); older macOS versions and Intel Macs are expected to work but are **not verified**. Linux and Windows are not supported.
+Platform: macOS 13 or newer, Apple Silicon or Intel. The preflight refuses everything else. The maintainers have tested only macOS 26.6.2 on Apple Silicon (October 2026); older macOS versions and Intel Macs are expected to work but are **not verified**. Linux and Windows are not supported.
 
 The kit pins the app versions listed in `manifest/apps.lock.json` and has been checked only against those. A newer app release may change a command-line flag or a tool; the installer and `doctor.sh` are written to fail or warn rather than guess (see "Fail closed" below).
+
+[Back to top](#security-policy)
 
 ## Threat Model
 
@@ -63,6 +67,8 @@ The kit pins the app versions listed in `manifest/apps.lock.json` and has been c
 - macOS, `sandbox-exec`, Claude Code, and GitHub's release hosting over TLS.
 - You, and any other process already running as your user.
 - This repository, at the commit you reviewed and installed from (see "The Lock File Is the Trust Root").
+
+[Back to top](#security-policy)
 
 ## Controls
 
@@ -90,7 +96,7 @@ What `share/craft.sb` enforces while the program runs, and what the wrapper does
 - **No Mach service lookups.** macOS starts a program requested through LaunchServices (`open`, an app launch) from launchd, not as a child of the server, so that program would not inherit the sandbox. An earlier profile allowed this: a bundle started with `open` from inside the sandbox read a file under the home folder and connected to a local listener, both of which the sandboxed process itself was refused. Denying Mach lookups closes that route (`open` then fails with `kLSNoExecutableErr` and nothing starts). Narrower denies (launchservicesd, `lsd.*`, coreservicesd and others) were tried and did not stop the launch. One exception is allowed: Metal's shader compiler (the XPC service `com.apple.MTLCompilerService`, inside Metal.framework, which runs in its own Apple sandbox and cannot be asked to start programs). Without it LightCraft aborts on its first GPU call.
 - The program's working directory is the workspace folder. The wrapper creates it if missing. It uses the kit's profile; if only the profile of an older hand-made setup is found, it says so on stderr before using it.
 
-Verification method, on the pinned versions (October 2026, macOS 26.6.2, Apple silicon):
+Verification method, on the pinned versions (October 2026, macOS 26.6.2, Apple Silicon):
 
 - `doctor.sh` runs four harmless probes through the installed wrapper for every sandbox app, every time: a write outside the folder, a read of a file under your home folder, a network connection, and `open` of a tiny bundle it writes to a temp folder (its program only writes a marker file). It reports FAIL if any of them is allowed, so a profile that silently stops being enforced is noticed. (If the write probe did get through, doctor removes the probe file.) The launch probe was checked against both profiles: with the earlier one `open` exited 0 and the marker appeared; with the current one `open` exited 1 and nothing ran. (`open -a` of an app that does not exist is not a valid test: it fails the same way under either profile.)
 - By hand, with system tools under the profile: the restrictions were also enforced on a grandchild process (a shell started by a shell); a write inside the folder and in `/private/tmp` worked; reading `/etc/hosts` worked; reading a dotfile in the home folder and listing the home folder failed with "Operation not permitted"; `stat` of the home folder worked; TCP connections to localhost and to an outside address failed with "Operation not permitted"; a DNS lookup failed; binding a unix-domain socket failed.
@@ -183,6 +189,8 @@ What the guarantee is: the bytes that get installed are the bytes whose hash is 
 - Temporary folders are private (`mktemp -d`) and removed on exit and on Ctrl-C.
 - Tests run the installer, uninstaller and doctor only inside `tests/isolated.sh`: a throw-away home folder, a fake `claude`, and tiny fixture archives. A test checks that a real home folder is left untouched.
 
+[Back to top](#security-policy)
+
 ## The Lock File Is the Trust Root
 
 `install.sh` believes `manifest/apps.lock.json` completely. That file decides which URLs are downloaded, which hash is accepted, which fence is used for each app and which extra arguments are added to the server command. The installer's URL check only requires `https://github.com/`, not a particular project. **A fork or a modified copy of this repository can ship a different lock** that points at different binaries (with matching hashes) or weakens a fence, and everything above would still pass, because the installer would be checking your download against the fork's own numbers. Treat the checkout like any other code you are about to run: it installs programs, registers them with Claude Code and installs skills that steer an agent.
@@ -208,6 +216,8 @@ Before installing from a source you do not already trust:
 
 Releases of the kit itself are not signed. There is no signature to verify beyond what Git and GitHub give you.
 
+[Back to top](#security-policy)
+
 ## What Has Not Been Verified
 
 What was tested, and how, is in [docs/VERIFICATION.md](docs/VERIFICATION.md). Stated explicitly, so that nothing is assumed:
@@ -219,6 +229,8 @@ What was tested, and how, is in [docs/VERIFICATION.md](docs/VERIFICATION.md). St
 - Newer versions of the apps than the ones in the lock.
 - The security of the Craft apps themselves.
 
+[Back to top](#security-policy)
+
 ## Practical Advice
 
 - Keep prompts on for anything you would not want done twice. The fences limit blast radius; they do not make actions reversible.
@@ -227,3 +239,5 @@ What was tested, and how, is in [docs/VERIFICATION.md](docs/VERIFICATION.md). St
 - Do not install the desktop apps unless you need them (`--no-gui`). They are not fenced.
 - Re-run `./doctor.sh` after a macOS update, after an app update and after changing the workspace. Run `./doctor.sh --smoke` to see each server do real work.
 - Do not paste crash reports or full command output into issues without removing your user name and paths.
+
+[Back to top](#security-policy)
