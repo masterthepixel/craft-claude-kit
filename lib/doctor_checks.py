@@ -969,8 +969,9 @@ def _hooks_drift(hooks_dir, receipt_path, hint):
 
 def cmd_legacy(ns):
     home = abs_path(ns.home)
-    hint = (installer_hint(os.path.dirname(_HERE)) + ": it migrates the old setup (removes the old hook entry and"
-            " the old files, and says so if it must keep one that something still uses)")
+    hint = (installer_hint(os.path.dirname(_HERE)) + ": it migrates the old setup when it recognizes it (removes the"
+            " old hook entry and the old files). If it says it kept a file, delete that file yourself once you no"
+            " longer use it")
     found = 0
     for cid, path in (("old-hook-script", os.path.join(home, LEGACY_HOOK_PART)),
                       ("old-profile", os.path.join(home, ".local", "share", "craft-sandbox", "craft.sb"))):

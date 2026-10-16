@@ -1228,7 +1228,7 @@ do_gui() { # APP
     skip) ck_skip "$bundle $ver already installed"; ck_set "R_gui_$app" "up to date"; return 0 ;;
     keep)
       ck_warn "$bundle is already in $GUI_DIR at version $(ck_get "P_guicur_$app"); left untouched (the kit pins $ver)" \
-        "To switch: quit the app, move it to the Trash yourself, and re-run with --gui."
+        "To switch: quit the app, move it to the Trash yourself, and re-run."
       ck_set "R_gui_$app" "kept $(ck_get "P_guicur_$app")"
       return 0
       ;;
