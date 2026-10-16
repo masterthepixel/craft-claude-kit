@@ -202,7 +202,11 @@ APPS_CSV=$(printf '%s' "$APPS" | xargs | tr ' ' ',')
 ALL_APPS_CSV=$(printf '%s' "$ALL_APPS" | xargs | tr ' ' ',')
 
 # ---- output ----
-if [ "$JSON" = 0 ] && [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != dumb ]; then
+_doc_color=0
+{ [ -t 1 ] && [ "${TERM:-dumb}" != dumb ]; } && _doc_color=1
+{ [ -n "${FORCE_COLOR:-}" ] && [ "${FORCE_COLOR:-}" != 0 ]; } && _doc_color=1
+{ [ -n "${CLICOLOR_FORCE:-}" ] && [ "${CLICOLOR_FORCE:-}" != 0 ]; } && _doc_color=1
+if [ "$JSON" = 0 ] && [ -z "${NO_COLOR:-}" ] && [ "$_doc_color" = 1 ]; then
   C_G=$'\033[32m' C_Y=$'\033[33m' C_R=$'\033[31m' C_B=$'\033[1m' C_D=$'\033[2m' C_0=$'\033[0m'
 else
   C_G='' C_Y='' C_R='' C_B='' C_D='' C_0=''

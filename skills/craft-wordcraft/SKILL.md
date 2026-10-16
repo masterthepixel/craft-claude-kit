@@ -25,7 +25,7 @@ Seen on v0.7.0 (2026-10) unless marked.
 
 ## Files
 - In: with the user's OK, `cp` (never `mv`) the input into `{{WORKSPACE}}/wordcraft/in/`. The fence also allows writes there, so never save into `in/`.
-- Out: `{{WORKSPACE}}/wordcraft/out/<name>-YYYYMMDD-HHMM.<ext>`. Absolute paths only: a leading `~` is not expanded and fails. Never save over an input.
+- Out: `{{WORKSPACE}}/wordcraft/out/<name>-YYYYMMDD-HHMM.<ext>`, stamp from `date +%Y%m%d-%H%M`, never guessed. Absolute paths only: a leading `~` is not expanded and fails. Never save over an input.
 - Save formats by extension: docx, pdf, odt, rtf, html, md, tex, txt, png. Any other extension fails with "can't save as".
 - Reads and writes are fenced to `{{WORKSPACE}}/wordcraft/`. A path outside it fails with "automation path rejected". Fix the path; do not retry elsewhere.
 

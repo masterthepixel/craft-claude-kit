@@ -30,7 +30,7 @@ VERBOSE=${VERBOSE:-0}
 LIST=0
 ONLY_CASES=''
 
-TESTS="help preflight dry-run lifecycle bad-sha zip-slip fence-fail only no-flags legacy bad-settings spaces custom-paths settings-symlink upgrade gui uninstall-options tty rerun kit-deleted bad-lock fence-override planted-cli restore-registration python-stub kit-home-guard symlinked-local env-override gui-replaced legacy-profile-notice plan-width kit-extra-file real-home"
+TESTS="help preflight dry-run color lifecycle bad-sha zip-slip fence-fail only no-flags legacy bad-settings spaces custom-paths settings-symlink upgrade gui uninstall-options tty rerun kit-deleted bad-lock fence-override planted-cli restore-registration python-stub kit-home-guard symlinked-local env-override gui-replaced legacy-profile-notice plan-width kit-extra-file real-home"
 
 usage() {
   sed -n '3,/^set -u/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
@@ -682,6 +682,26 @@ t_dry_run() {
   a_eq "...and changes nothing" "$h0" "$(tree_hash "$HOME")"
   end_case
 }
+
+t_color() {
+  begin_case color
+  new_world
+  local plain stripped
+  inst_y --dry-run
+  plain=$(cat "$OUTF")
+  a_true "a plain run (no terminal, no FORCE_COLOR) has no escape codes" no_escape
+  run env -u NO_COLOR FORCE_COLOR=1 "$BASH_UT" "$INSTALL" --dry-run --yes --no-gui --gui-dir "$GUI_DIR"
+  a_rc "--dry-run with FORCE_COLOR=1 exits 0" 0
+  a_true "FORCE_COLOR=1 colors the output" has_escape
+  stripped=$(sed $'s/\033\\[[0-9;]*m//g' "$OUTF")
+  a_eq "the colored text, with the codes stripped, is the plain text" "$plain" "$stripped"
+  run env FORCE_COLOR=1 NO_COLOR=1 "$BASH_UT" "$INSTALL" --dry-run --yes --no-gui --gui-dir "$GUI_DIR"
+  a_true "NO_COLOR wins over FORCE_COLOR" no_escape
+  end_case
+}
+
+has_escape() { grep -q $'\033' "$OUTF"; }
+no_escape() { ! grep -q $'\033' "$OUTF"; }
 
 t_lifecycle() {
   new_world

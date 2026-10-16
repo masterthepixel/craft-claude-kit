@@ -147,7 +147,7 @@ Limits:
 - **Over a size limit they ask instead of judging a partial view**: a shell command over 200000 characters or with more than 200 nested `$(...)`, a shell check that needs more than a fixed amount of parsing work (a work count, not a clock, so the result does not depend on the machine), or MCP arguments over 20000 nodes, 20 levels deep or 500 path arguments.
 - **The hooks do not guard Edit or Write.** An agent could rewrite the hook scripts or `hooks/risky-tools.json` in the kit folder, or `settings.json`. The installer records the SHA-256 of the three hook files in the receipt; `doctor.sh` WARNs when they changed and FAILs its canned payloads when the risk table no longer answers them. That notices tampering after the fact; it does not prevent it.
 - **The hook command is `python3 <script> ... || true`.** If the `python3` that Claude Code finds cannot run the script, `|| true` hides it and the hook is silently off. `doctor.sh` tests the hooks with the `python3` on its own `PATH` and FAILs when there is none; a Claude Code started with a different `PATH` is not covered.
-- **What "ask" does depends on Claude Code.** In permission modes that skip or automate prompts, an ask may not reach a human. Not every mode has been tested. If you run Claude Code without prompts, do not count on the hooks; the fences still apply.
+- **What "ask" does depends on Claude Code.** In permission modes that skip or automate prompts, an ask may not reach a human. The prompt was seen to appear and wait in accept-edits mode and in auto mode (Claude Code 2.1.301); plan, `dontAsk` and `bypassPermissions` were not tested. If you run Claude Code without prompts, do not count on the hooks; the fences still apply.
 - They cover only the server names the installer registers (`wordcraft`, `gridcraft`, and so on) and only the Claude Code configuration folder they were installed into.
 - The workspace path is written into the hook command at install time. If you move the workspace, run the installer again; `doctor.sh` warns about a mismatch.
 
@@ -225,7 +225,7 @@ What was tested, and how, is in [docs/VERIFICATION.md](docs/VERIFICATION.md). St
 - Intel Macs, and macOS versions other than 26.6.2.
 - Fence behavior for every tool of every app. Opening and saving with absolute paths was checked for the five built-in fences, the sandbox by probe, and the smoke sequences of all 13. Not every path-taking command was tried, nor were symbolic-link and race cases for the four `roots` apps.
 - Whether the five built-in-fence apps make network connections, and whether the sandboxed apps can use Apple Events or the pasteboard to reach files the profile blocks (Mach lookups, and with them launching programs through macOS, are denied and tested).
-- How the hooks behave in every Claude Code permission mode.
+- How the hooks behave in the permission modes not tested: plan, `dontAsk` and `bypassPermissions`.
 - Newer versions of the apps than the ones in the lock.
 - The security of the Craft apps themselves.
 

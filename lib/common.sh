@@ -24,11 +24,17 @@ CK_WRAPPER_MARKER="craft-sandbox (craft-claude-kit)"
 # output
 # ---------------------------------------------------------------------------------------------
 CK_LOG_FILE=""
-CK_RED="" CK_GREEN="" CK_YELLOW="" CK_BOLD="" CK_DIM="" CK_RESET=""
+CK_RED="" CK_GREEN="" CK_YELLOW="" CK_CYAN="" CK_BOLD="" CK_DIM="" CK_RESET=""
 
+# Color only on a real terminal, or when FORCE_COLOR / CLICOLOR_FORCE is set (so a run saved with tee keeps it).
+# NO_COLOR always wins. Color is applied to words only, never to padding, so the plain text is unchanged.
 ck_color_init() {
-  if [ -z "${NO_COLOR:-}" ] && [ -t 1 ] && [ "${TERM:-dumb}" != dumb ]; then
-    CK_RED=$'\033[31m' CK_GREEN=$'\033[32m' CK_YELLOW=$'\033[33m'
+  local want=0
+  if [ -t 1 ] && [ "${TERM:-dumb}" != dumb ]; then want=1; fi
+  if [ -n "${FORCE_COLOR:-}" ] && [ "${FORCE_COLOR:-}" != 0 ]; then want=1; fi
+  if [ -n "${CLICOLOR_FORCE:-}" ] && [ "${CLICOLOR_FORCE:-}" != 0 ]; then want=1; fi
+  if [ -z "${NO_COLOR:-}" ] && [ "$want" = 1 ]; then
+    CK_RED=$'\033[31m' CK_GREEN=$'\033[32m' CK_YELLOW=$'\033[33m' CK_CYAN=$'\033[36m'
     CK_BOLD=$'\033[1m' CK_DIM=$'\033[2m' CK_RESET=$'\033[0m'
   fi
 }
@@ -39,7 +45,20 @@ ck_log() {
 }
 
 ck_say()  { printf '%s\n' "$*"; ck_log "$*"; }
-ck_head() { printf '\n%s==> %s%s\n' "$CK_BOLD" "$*" "$CK_RESET"; ck_log "==> $*"; }
+ck_head() { printf '\n%s%s==> %s%s\n' "$CK_BOLD" "$CK_CYAN" "$*" "$CK_RESET"; ck_log "==> $*"; }
+ck_dim()  { printf '%s%s%s\n' "$CK_DIM" "$*" "$CK_RESET"; ck_log "$*"; }
+# ck_paint TEXT: color the leading word of a (possibly padded) table cell by what it says; the width is unchanged.
+ck_paint() {
+  local t=$1 w=${1%% *} c=""
+  case $w in
+    install | installed | upgrade | upgraded | add | added) c=$CK_GREEN ;;
+    replace* | re-register* | missing) c=$CK_YELLOW ;;
+    FAILED) c=$CK_RED$CK_BOLD ;;
+    skip | skipped | keep | kept | registered | up | off) c=$CK_DIM ;;
+  esac
+  if [ -z "$c" ] || [ -z "$CK_RESET" ]; then printf '%s' "$t"; return 0; fi
+  printf '%s%s%s%s' "$c" "$w" "$CK_RESET" "${t#"$w"}"
+}
 ck_ok()   { printf '  %sOK%s    %s\n' "$CK_GREEN" "$CK_RESET" "$*"; ck_log "OK    $*"; }
 ck_skip() { printf '  %s--%s    %s\n' "$CK_DIM" "$CK_RESET" "$*"; ck_log "--    $*"; }
 ck_hint() { [ -z "${1:-}" ] || { printf '        fix: %s\n' "$1"; ck_log "      fix: $1"; }; }

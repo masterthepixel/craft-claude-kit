@@ -108,7 +108,7 @@ A re-run keeps what the previous install used: its workspace, `--prefix` and `--
 | `--no-mcp` | Do not register the MCP servers (also skips the check for `claude`). |
 | `-h`, `--help` / `--version` | Help / print the kit version. |
 
-Environment: `CRAFT_KIT_HOME` (kit runtime folder, default `~/.local/share/craft-claude-kit`; it must be a new or empty folder, or an earlier kit folder, and must not contain `--prefix`, the Claude Code folder or `--gui-dir`, because `uninstall.sh` deletes what is inside it), `CLAUDE_CONFIG_DIR` (Claude Code config folder, default `~/.claude`), `CLAUDE_BIN` (Claude Code command, default `claude`), `NO_COLOR`. Three more exist for tests: `CRAFT_KIT_LOCK` (another lock file), `CRAFT_KIT_OFFLINE_DIR` (same as `--offline-dir`) and `CRAFT_KIT_GUI_DIR` (the default desktop-app folder instead of `/Applications`).
+Environment: `CRAFT_KIT_HOME` (kit runtime folder, default `~/.local/share/craft-claude-kit`; it must be a new or empty folder, or an earlier kit folder, and must not contain `--prefix`, the Claude Code folder or `--gui-dir`, because `uninstall.sh` deletes what is inside it), `CLAUDE_CONFIG_DIR` (Claude Code config folder, default `~/.claude`), `CLAUDE_BIN` (Claude Code command, default `claude`), `NO_COLOR` (no color), `FORCE_COLOR=1` (keep color when the output is piped, for example into `tee`). Three more exist for tests: `CRAFT_KIT_LOCK` (another lock file), `CRAFT_KIT_OFFLINE_DIR` (same as `--offline-dir`) and `CRAFT_KIT_GUI_DIR` (the default desktop-app folder instead of `/Applications`).
 
 Exit codes: `0` ok, `1` something failed (the others still finished), `2` usage error, `3` a requirement is missing, `4` declined or no terminal and no `--yes`.
 
@@ -240,12 +240,13 @@ The short version: each server is confined to one folder, the installer only fet
 | Installer, uninstaller, doctor, hooks, helpers | Automated tests (`make test`), run in a throw-away fake home with a fake `claude` and tiny fake downloads. They never touch your real Claude config. |
 | The 13 servers | Driven for real, one at a time, at the pinned versions, on one Apple Silicon Mac running macOS 26: tool lists recorded in `data/tools/`, skill claims checked against the live server, and each app's smoke test (`tests/smoke/<app>.json`, 6 to 10 steps) passes under the shipped sandbox profile (13 of 13, re-run on 2026-10-15; see [docs/VERIFICATION.md](docs/VERIFICATION.md)). |
 | A first install on a clean account | Run once, on a new macOS user account with no dotfiles and no Claude Code (macOS 26.6.2, Apple Silicon, 2026-10-15): the real downloads for all 13 command-line apps and all 13 desktop apps installed, skills and hooks registered, `doctor.sh --smoke` passed, a second run changed nothing, and `uninstall.sh` removed what the kit installed. That account had no Claude Code, so it used `--no-mcp`. |
+| A second Mac, with Claude Code | The maintainer's second Mac (Mac mini, Apple Silicon, macOS 27.0.1, 2026-10-15), with Claude Code already installed (2.1.296 at install time; it updated itself to 2.1.301 before the doctor run). A public `git clone` and `./install.sh`: 13 of 13 apps, all 13 MCP servers registered through the real `claude mcp add`, 14 of 14 skills, 2 of 2 hooks. Then `doctor.sh --smoke` in a new Claude Code session: 152 pass, 0 warn, 0 fail. WordCraft wrote a one-page `.docx` into its `out/` folder. The shell hook showed its prompt before `wordcraft-cli --version` in accept-edits mode and in auto mode. |
 | Fences | Sandbox refusals (writing outside the folder, reading your home folder, using the network, starting a program through macOS) were observed on real sandboxed servers during development. `doctor.sh` repeats the test on your machine. |
 
 | Not tested yet | Notes |
 |---|---|
-| MCP registration on a clean Mac | The registration step (`claude mcp add`) was exercised against a fake `claude` in the tests and on the development Mac, but not on a clean account with Claude Code installed. |
-| Intel Macs, and macOS 13 to 25 | The builds are universal and the kit uses only tools from macOS 13, but it has not been run there. |
+| Outside testers | Both real runs were on the maintainer's own Macs. Nobody else has run it yet. |
+| Intel Macs, and macOS 13 to 25 or later than 27 | The builds are universal and the kit uses only tools from macOS 13, but it has not been run there. |
 | Launching the desktop apps | The kit installs them and checks their signature, but never launches them. macOS accepted all 13 (`spctl`); whether it asks you to confirm a first launch was not tested. |
 | Newer upstream releases | The kit pins versions; a new release can change tool names or behaviour. `doctor.sh` shows drift. |
 

@@ -641,12 +641,12 @@ print_plan() {
       "$([ "$REUSED_APPS" = 1 ] && printf ' --only %s   (the apps installed so far; --only all for all %s)' "$(printf '%s' "$APPS" | tr ' ' ',')" "$(count_words "$LOCK_APPS")")"
   fi
   # Table lines stay within 80 columns (app names are at most 11 characters).
-  printf '  %s%s%s%s%s\n' "$(pad 12 APP)" "$(pad 24 'CLI')" "$(pad 8 FENCE)" "$(pad 16 'MCP SERVER')" \
-    "$([ "$GUI_MODE" = no ] || printf 'DESKTOP')"
+  printf '%s  %s%s%s%s%s%s\n' "$CK_BOLD" "$(pad 12 APP)" "$(pad 24 'CLI')" "$(pad 8 FENCE)" "$(pad 16 'MCP SERVER')" \
+    "$([ "$GUI_MODE" = no ] || printf 'DESKTOP')" "$CK_RESET"
   local any_replace=0
   for app in $APPS; do
-    printf '  %s%s%s%s%s\n' "$(pad 12 "$app")" "$(pad 24 "$(cli_label "$app")")" "$(pad 8 "$(ck_get "L_fence_$app")")" \
-      "$(pad 16 "$(mcp_label "$app")")" "$([ "$GUI_MODE" = no ] || gui_label "$app")"
+    printf '  %s%s%s%s%s%s%s\n' "$CK_BOLD" "$(pad 12 "$app")" "$CK_RESET" "$(ck_paint "$(pad 24 "$(cli_label "$app")")")" "$(pad 8 "$(ck_get "L_fence_$app")")" \
+      "$(ck_paint "$(pad 16 "$(mcp_label "$app")")")" "$([ "$GUI_MODE" = no ] || ck_paint "$(gui_label "$app")")"
     case "$(ck_get "P_cli_$app")" in
       replace) any_replace=1 ;;
     esac
@@ -927,7 +927,7 @@ fetch_asset() { # APP cli|gui OUTFILE -> downloads (or copies offline) and verif
       https://github.com/*) ;;
       *) ck_fail "$app: refusing to download $url (only https://github.com/ release URLs are allowed)" "Restore manifest/apps.lock.json from the repository."; return 1 ;;
     esac
-    ck_say "  ..    downloading $asset ($(ck_mb "$(ck_get "L_${kind:0:1}size_$app")"))"
+    ck_dim "  ..    downloading $asset ($(ck_mb "$(ck_get "L_${kind:0:1}size_$app")"))"
     local progress=-sS why
     [ ! -t 2 ] || progress=--progress-bar
     # --speed-limit/--speed-time: a stalled transfer (under 1 KB/s for 60 s) fails and is retried
@@ -1555,15 +1555,17 @@ EOF
 print_summary() {
   local app ready=0 total=0
   ck_head "Summary"
-  printf '  %s%s%s%s\n' "$(pad 13 APP)" "$(pad 18 'COMMAND-LINE APP')" "$(pad 18 'MCP SERVER')" "$([ "$GUI_MODE" = yes ] && printf 'DESKTOP APP')"
+  printf '%s  %s%s%s%s%s\n' "$CK_BOLD" "$(pad 13 APP)" "$(pad 18 'COMMAND-LINE APP')" "$(pad 18 'MCP SERVER')" "$([ "$GUI_MODE" = yes ] && printf 'DESKTOP APP')" "$CK_RESET"
   for app in $APPS; do
     total=$((total + 1))
     ck_in_list "$app" "$FAILED_APPS" || ready=$((ready + 1))
-    printf '  %s%s%s%s\n' "$(pad 13 "$app")" "$(pad 18 "$(ck_get "R_cli_$app")")" "$(pad 18 "$(ck_get "R_mcp_$app")")" \
-      "$([ "$GUI_MODE" = yes ] && ck_get "R_gui_$app")"
+    printf '  %s%s%s%s%s%s\n' "$CK_BOLD" "$(pad 13 "$app")" "$CK_RESET" "$(ck_paint "$(pad 18 "$(ck_get "R_cli_$app")")")" "$(ck_paint "$(pad 18 "$(ck_get "R_mcp_$app")")")" \
+      "$([ "$GUI_MODE" = yes ] && ck_paint "$(ck_get "R_gui_$app")")"
   done
   ck_log "summary: $ready of $total apps ready; failed: ${FAILED_APPS:-none}"
-  printf '\n  %s of %s app(s) ready.' "$ready" "$total"
+  local rc_col=$CK_GREEN
+  [ "$ready" = "$total" ] || rc_col=$CK_RED
+  printf '\n  %s%s of %s app(s) ready.%s' "$CK_BOLD$rc_col" "$ready" "$total" "$CK_RESET"
   [ "$DO_SKILLS" = 0 ] || printf ' Skills: %s of %s.' "$(count_words "$SKILLS_DONE")" "$(count_words "$SK_NAMES")"
   [ "$DO_HOOKS" = 0 ] || printf ' Hooks: %s of 2.' "$(printf '%s' "$HOOKS_DONE" | grep -c . || true)"
   printf '\n'
@@ -1577,9 +1579,8 @@ print_summary() {
     printf '  Then check everything with: %s/doctor.sh\n' "$kh"
     return 0
   fi
+  printf '\n  %sNext steps:%s\n' "$CK_BOLD" "$CK_RESET"
   cat <<EOF
-
-  Next steps:
     1. Open a NEW Claude Code session (servers and skills are loaded at start-up).
     2. Check everything: $kh/doctor.sh   (add --smoke to drive each server once)
     3. Put files for an app in $ws/<app>/in/ ; results go to $ws/<app>/out/

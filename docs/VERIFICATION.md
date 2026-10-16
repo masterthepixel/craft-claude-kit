@@ -30,9 +30,10 @@ repository does keep, and what you can re-run, is the smoke test, the tool snaps
 
 | Area | Result | Level |
 |---|---|---|
-| The kit's own code: installer, uninstaller, doctor, hooks, helpers | Every step of `make test` passes in a fake home: 51 hook tests, 143 helper tests, 147 doctor checks, 56 installer and uninstaller cases (578 checks), 77 tool tests (section 1; run of 2026-10-15) | Automated |
+| The kit's own code: installer, uninstaller, doctor, hooks, helpers | Every step of `make test` passes in a fake home: 51 hook tests, 143 helper tests, 147 doctor checks, 57 installer and uninstaller cases (583 checks), 77 tool tests (section 1; run of 2026-10-15) | Automated |
 | Same, with only the stock macOS toolchain (Python 3.9.6, jq 1.7.1, bash 3.2) | Passes (section 8) | Automated, run once |
 | A real first install of the real downloads on a clean Mac | Run once, on a new macOS standard-user account with no dotfiles and no Claude Code (macOS 26.6.2, Apple Silicon, 2026-10-15), installed with `--no-mcp`: all 13 command-line apps and all 13 desktop apps downloaded, matched their SHA-256 and passed `codesign`; 14 of 14 skills and both hooks registered; `doctor.sh` and `doctor.sh --smoke` passed except the missing Claude Code CLI; a second run changed nothing; `uninstall.sh` left only the workspace and the desktop apps. This run found and fixed the desktop-app signature failure (see CHANGELOG). **Not covered:** MCP registration against a real Claude Code, Intel, macOS 13 to 25 | Run by hand, once |
+| A second Mac with Claude Code installed | The maintainer's second Mac (Mac mini, Apple Silicon, macOS 27.0.1, 2026-10-15), with Claude Code already installed (2.1.296 at install time; it updated itself to 2.1.301 before the doctor run). A public `git clone` and `./install.sh`: 13 of 13 apps, all 13 MCP servers registered through the real `claude mcp add`, 14 of 14 skills, 2 of 2 hooks. Then `doctor.sh --smoke` in a new Claude Code session: 152 pass, 0 warn, 0 fail. WordCraft wrote a one-page `.docx` into its `out/` folder. The shell hook showed its prompt before `wordcraft-cli --version` in accept-edits mode and in auto mode. The mini's Claude could not see its own permission prompts; the prompt was read from the terminal screen | Run by hand, once |
 | The 13 servers start, list tools and do real work | 13 of 13 smoke tests pass (101 steps, 2026-10-15, LightCraft after the Metal fix in section 2); each also fails when made to | Automated (`doctor.sh --smoke`) |
 | Statements in the 14 skills | 439 checked against the live servers, 94 corrected, as counted by the per-app checking agents (their logs are not in the repository, so the figures cannot be traced line by line); explicit "not verified" markers remain | Run by hand |
 | Sandbox fence, 8 apps | Refuses write, read, network and starting a program through macOS on this Mac; re-tested by `doctor.sh` on yours | Automated probe, plus run by hand |
@@ -42,7 +43,7 @@ repository does keep, and what you can re-run, is the smoke test, the tool snaps
 | Desktop-app installation (`--gui`) | Fixture disk images only | Partly automated |
 | Intel Macs; macOS other than 26.6.2 | **not verified** | Not verified |
 | Which skill Claude picks for a request ("routing") | **not measured** | Not verified |
-| What a hook's "ask" does in every Claude Code permission mode | **not tested** | Not verified |
+| What a hook's "ask" does in every Claude Code permission mode | Checked on Claude Code 2.1.301, macOS 27.0.1: the prompt appeared and waited in accept-edits mode and in auto mode. **Not tested:** plain default, plan, `dontAsk` and `bypassPermissions` | Run by hand, partly |
 
 [Back to top](#what-has-been-verified-and-what-has-not)
 
@@ -249,7 +250,7 @@ under the fence, and in-document deletes. The command ids come from the skills, 
 app's live `list_commands`; `data/tools` holds tool names only, so the ids are not re-checked against a
 snapshot. The table remains incomplete by design; the fences, not the hooks, are the control.
 
-Not verified: what an "ask" does when Claude Code runs in a permission mode that skips or automates prompts (the
+Not verified: what an "ask" does in the permission modes not listed in section 1 (plan, `dontAsk`, `bypassPermissions`; the
 kit's tests do not drive Claude Code); that Claude Code runs the hooks with a 10-second timeout as configured.
 
 [Back to top](#what-has-been-verified-and-what-has-not)
@@ -271,15 +272,15 @@ revealed the extended-attribute problem that the fixtures had missed (fixed; see
 
 ## 7. What Is Not Verified, in One List
 
-- The installer's calls to the real `claude mcp add` and `claude mcp remove` on a clean Mac. The one clean-account
-  install (section 1) used `--no-mcp`, because that account had no Claude Code.
+- Anyone else's machine: both real installs were on the maintainer's own Macs. `claude mcp remove` against a real Claude Code
+  was exercised only through the uninstall tests.
 - Whether macOS asks to confirm the first launch of a desktop app (`spctl` accepted all 13, which is not the same).
-- Intel Macs; macOS 13 to 25; macOS later than 26.6.2; Claude Code versions other than 2.1.237.
+- Intel Macs; macOS 13 to 25; macOS later than 27.0.1; Claude Code versions other than 2.1.237, 2.1.296 and 2.1.301.
 - Whether `sandbox-exec` keeps working in future macOS releases.
 - Whether the five built-in fences hold in every code path of their apps; races; network behavior of those five.
 - Apple Events and the pasteboard from a sandboxed app (Mach lookups are denied, and launching a program through
   macOS is refused: tested by hand and by `doctor.sh`).
-- Hooks: coverage of the risky-tools table (section 5) and the behavior of "ask" in every permission mode.
+- Hooks: coverage of the risky-tools table (section 5) and the behavior of "ask" in plan, `dontAsk` and `bypassPermissions` mode.
 - Routing between skills, and resistance to hostile files.
 - The printing, scripting, plug-in, password, signing, download and delete-for-good commands of every app.
 - Commands that need a window or a running desktop app (`--connect`, `--bridge`, `--control`), by design.

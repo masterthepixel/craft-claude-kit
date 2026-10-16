@@ -32,6 +32,8 @@ Fixes from the first adversarial review (round 1).
 
 ### Changed
 
+- **Colored output.** The installer, uninstaller and doctor now color the words that matter: cyan section headings, green `install`/`add`/`installed`, yellow `replace`, dim `skip` and download lines, a bold red `FAILED`, and a green or red "N of M app(s) ready" line. Only words are colored, never the padding, so the plain text is unchanged (a test strips the codes and compares). Color appears on a terminal, or when `FORCE_COLOR=1` is set so a run piped into `tee` keeps it; `NO_COLOR` always turns it off.
+- **Output file names use the real time.** The skills now say to take the `YYYYMMDD-HHMM` stamp from `date +%Y%m%d-%H%M` instead of inventing one (a model had written `1200` for a file saved at 20:31).
 - **Uninstall without the kit folder** takes the programs folder from the registrations (or `--prefix DIR`), removes only the registrations that run through the kit's own wrapper, lists the others with their remove commands, and exits 1 instead of claiming success while one is left.
 - **Uninstall** removes a CLI only if it still has the recorded SHA-256, and a desktop app only at the recorded version (`guiVersion`); accepts a kit folder reached through a symlink; lists every name it deletes inside the kit folder; refuses a receipt whose kit folder contains the prefix, the Claude folder or the workspace.
 - **Install** refuses a non-empty `CRAFT_KIT_HOME` the kit did not make, and a `CRAFT_KIT_HOME` that is or contains `--prefix`, the Claude Code folder or `--gui-dir`.
