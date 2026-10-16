@@ -577,7 +577,7 @@ t_help() {
   uninst --help
   a_rc "uninstall.sh --help exits 0" 0
   missing=''
-  for f in -y --yes --dry-run --keep-cli --remove-gui --keep-skills --keep-hooks; do
+  for f in -y --yes --dry-run --keep-cli --keep-gui --keep-skills --keep-hooks; do
     grep -Fq -- "$f" "$OUTF" || missing="$missing $f"
   done
   agg "uninstall.sh --help documents every flag of the contract" "${missing:+missing:$missing}"
@@ -989,9 +989,10 @@ t_only() {
   a_true "the sandbox apps get craft-sandbox and its profile" sh -c '[ -x "$1/craft-sandbox" ] && [ -f "$2/share/craft.sb" ]' _ "$PREFIX" "$KIT"
   a_jq "the receipt lists the selected apps as installed and the others not" "$KIT/receipt.json" \
     '((.apps.wordcraft.cli // false) and (.apps.filmcraft.cli // false)) and ([.apps | to_entries[] | select(.key != "wordcraft" and .key != "filmcraft") | select(.value.cli // false)] | length == 0)'
-  a_true "without --gui the default is no desktop app (inferred)" test -z "$(ls -A "$GUI_DIR" 2> /dev/null)"
+  a_eq "by default the selected apps' desktop apps are installed too, and no others" "FilmCraft.app WordCraft.app" "$(ls "$GUI_DIR" 2> /dev/null | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//')"
   new_world
   inst_y --only pdfcraft
+  a_true "--no-gui installs no desktop app" test -z "$(ls -A "$GUI_DIR" 2> /dev/null)"
   a_rc "--only with a single app exits 0" 0
   check_clis "pdfcraft"
   a_eq "only pdfcraft is registered" '["pdfcraft"]' "$(jq -c '.mcpServers | keys' "$CLAUDE_JSON")"
@@ -1364,26 +1365,24 @@ t_uninstall_options() {
   a_eq "both kept hooks are still registered" 2 "$(list_hooks | grep -c 'craft-.*-guard.py')"
   end_case
 
-  begin_case uninstall-gui-default-keeps-apps
+  begin_case uninstall-gui-default-removes-apps
   new_world
   make_fake_app "$GUI_DIR" PdfCraft.app 0.1.0
   inst_y --gui --only wordcraft,pdfcraft
   a_true "setup: WordCraft.app was installed by the kit" test -d "$GUI_DIR/WordCraft.app"
   uninst_y
-  a_rc "uninstall.sh without --remove-gui exits 0" 0
-  a_true "WordCraft.app is kept without --remove-gui" test -d "$GUI_DIR/WordCraft.app"
-  a_true "the user's own PdfCraft.app is kept" test -d "$GUI_DIR/PdfCraft.app"
-  end_case
-
-  begin_case uninstall-remove-gui
-  new_world
-  make_fake_app "$GUI_DIR" PdfCraft.app 0.1.0
-  inst_y --gui --only wordcraft,pdfcraft
-  uninst_y --remove-gui
-  a_rc "uninstall.sh --remove-gui exits 0" 0
-  a_false "WordCraft.app (installed by the kit) is removed" test -e "$GUI_DIR/WordCraft.app"
+  a_rc "uninstall.sh exits 0" 0
+  a_false "WordCraft.app (installed by the kit) is removed by default" test -e "$GUI_DIR/WordCraft.app"
   a_true "PdfCraft.app (not installed by the kit: another version was already there) is kept" test -d "$GUI_DIR/PdfCraft.app"
   a_true "the GUI dir itself is kept" test -d "$GUI_DIR"
+  end_case
+
+  begin_case uninstall-keep-gui
+  new_world
+  inst_y --gui --only wordcraft
+  uninst_y --keep-gui
+  a_rc "uninstall.sh --keep-gui exits 0" 0
+  a_true "WordCraft.app is kept with --keep-gui" test -d "$GUI_DIR/WordCraft.app"
   end_case
 }
 
@@ -1411,6 +1410,7 @@ t_tty() {
   a_rc "on a terminal without --gui/--no-gui, answering yes exits 0" 0
   a_out "...and the plan or prompt offers the desktop apps (mentions desktop/GUI)" 'desktop|gui'
   check_clis "wordcraft"
+  a_true "...and the desktop app is installed too (the default)" test -d "$GUI_DIR/WordCraft.app"
   a_true "no disk image is left mounted" no_images_mounted
   new_world
   run python3 -I "$FIX/pty_drive.py" --answer n -- "$BASH_UT" "$INSTALL" --only wordcraft --gui-dir "$GUI_DIR"
@@ -1679,8 +1679,8 @@ t_gui_replaced() {
   make_fake_app "$GUI_DIR" WordCraft.app 9.9.9
   inst_y --gui --only wordcraft
   a_jq "after the user replaced it, the receipt no longer claims it (R1-CONFIG-6)" "$KIT/receipt.json" '(.apps.wordcraft.gui // false) | not'
-  uninst_y --remove-gui
-  a_true "uninstall --remove-gui leaves the user's 9.9.9 bundle in place" test -d "$GUI_DIR/WordCraft.app"
+  uninst_y
+  a_true "uninstall leaves the user's 9.9.9 bundle in place" test -d "$GUI_DIR/WordCraft.app"
   end_case
 }
 

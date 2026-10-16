@@ -6,7 +6,7 @@
 #
 # It removes only what the kit owns: MCP registrations whose command points into the kit's folders,
 # the kit's skills (unless you edited them), its hook entries, craft-sandbox, the CLIs, desktop apps
-# only with --remove-gui (moved to the Trash), and finally the kit folder. It NEVER deletes your
+# by default (moved to the Trash; --keep-gui keeps them), and finally the kit folder. It NEVER deletes your
 # workspace. Bash 3.2 compatible (macOS /bin/bash).
 set -euo pipefail
 
@@ -22,7 +22,7 @@ KIT_DIR=$(cd -P "$(dirname "$src")" && pwd -P)
 
 PROG=uninstall.sh
 TS=$(date +%Y%m%d-%H%M%S)
-YES=0 DRY_RUN=0 KEEP_CLI=0 REMOVE_GUI=0 KEEP_SKILLS=0 KEEP_HOOKS=0 OPT_PREFIX=""
+YES=0 DRY_RUN=0 KEEP_CLI=0 REMOVE_GUI=1 KEEP_SKILLS=0 KEEP_HOOKS=0 OPT_PREFIX=""
 
 usage() {
   cat <<'EOF'
@@ -41,7 +41,7 @@ Options:
   -y, --yes        do not ask
       --dry-run    show what would be removed; change nothing
       --keep-cli   keep the <app>-cli programs
-      --remove-gui also move the desktop apps the kit installed to the Trash
+      --keep-gui   keep the desktop apps (by default the ones the kit installed go to the Trash)
       --keep-skills  keep the craft-* skills
       --keep-hooks   keep the two hooks (and the scripts they run)
       --prefix DIR only when the kit folder is gone: where the <app>-cli programs and
@@ -68,6 +68,7 @@ parse_args() {
       -y | --yes) YES=1 ;;
       --dry-run) DRY_RUN=1 ;;
       --keep-cli) KEEP_CLI=1 ;;
+      --keep-gui) REMOVE_GUI=0 ;;
       --remove-gui) REMOVE_GUI=1 ;;
       --keep-skills) KEEP_SKILLS=1 ;;
       --keep-hooks | --keep-hook) KEEP_HOOKS=1 ;;
@@ -310,9 +311,7 @@ print_plan() {
   [ "$KEEP_CLI" = 0 ] || printf '    the <app>-cli programs (--keep-cli)\n'
   [ "$KEEP_SKILLS" = 0 ] || printf '    the skills (--keep-skills)\n'
   [ "$KEEP_HOOKS" = 0 ] || printf '    the hooks and %s (--keep-hooks)\n' "$(ck_tilde "$KIT_HOME/hooks")"
-  if [ "$REMOVE_GUI" = 0 ]; then
-    printf '    desktop apps (pass --remove-gui to move the ones the kit installed to the Trash)\n'
-  fi
+  [ "$REMOVE_GUI" = 1 ] || printf '    the desktop apps (--keep-gui)\n'
   [ -z "$GUI_RUNNING" ] || printf '    desktop apps that are running now (quit them first): %s\n' "$GUI_RUNNING"
   [ "$MCP_UNREADABLE" = 0 ] || printf '\n  %sWARN%s  could not read the Claude Code MCP config; registrations will be left alone.\n' "$CK_YELLOW" "$CK_RESET"
   if [ -n "$MCP_REMOVE" ] && ! command -v "$CLAUDE_BIN" >/dev/null 2>&1; then

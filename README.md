@@ -29,7 +29,7 @@ cd craft-claude-kit && ./install.sh
 ~/.local/share/craft-claude-kit/doctor.sh
 ```
 
-`install.sh` shows a plan first (what it will download, where it will write, which Claude Code settings it will touch), asks once, and changes nothing until you say yes. It is safe to run again: it repairs what is missing and skips what is up to date. macOS only. Unofficial: see [Not affiliated](#not-affiliated).
+`install.sh` shows a plan first (what it will download, where it will write, which Claude Code settings it will touch), asks once, and changes nothing until you say yes. It installs both the command-line apps that Claude uses and the desktop apps you can open yourself. It is safe to run again: it repairs what is missing and skips what is up to date. macOS only. Unofficial: see [Not affiliated](#not-affiliated).
 
 [Back to top](#craft-claude-kit)
 
@@ -37,7 +37,7 @@ cd craft-claude-kit && ./install.sh
 
 ## What You Get
 
-- **13 apps**, installed as headless command-line programs (the desktop `.app` versions are optional, `--gui`).
+- **13 apps**, each installed as a headless command-line program (what Claude drives) and as a desktop `.app` (to open the files yourself).
 - **13 MCP servers**, registered with Claude Code at user scope, each limited to its own folder, `~/craft-workspace/<app>/` (8 by the macOS sandbox, 5 by the app's own folder flags; see [Security](#security)).
 - **14 Claude Code skills**: `craft-apps` (when to use which app, the rules, hand-offs between apps) and one `craft-<app>` per app (which tools to load, a workflow, verified gotchas, what never to do).
 - **2 safety hooks** that ask before risky things (see [Security](#security)). They ask; they never block.
@@ -85,20 +85,20 @@ Terms used below:
 ```sh
 ./install.sh --dry-run          # show the plan, change nothing
 ./install.sh                    # show the plan, ask once, install
-./install.sh --yes --gui        # no questions, command-line apps and desktop apps
+./install.sh --yes              # no questions: the command-line apps and the desktop apps
 ./install.sh --only wordcraft,pdfcraft
 ```
 
-Run from a terminal, it asks `[y] yes  [g] yes, and the desktop apps too  [N] no`. Without a terminal (a script, or Claude Code's Bash tool) it refuses to guess and exits with code 4 unless you pass `--yes`; `--yes` alone does not include the desktop apps.
+Run from a terminal, it asks once (`[y/N]`). Without a terminal (a script, or Claude Code's Bash tool) it refuses to guess and exits with code 4 unless you pass `--yes`.
 
 A re-run keeps what the previous install used: its workspace, `--prefix` and `--gui-dir`, and every app installed by any earlier run. `--only` adds apps to that set and never removes one; no option removes a single app from it (`--only all` selects all 13). The plan shows the set at the top, and a first `--only` run says that later plain re-runs keep it.
 
 | Option | What it does |
 |---|---|
-| `-y`, `--yes` | Do not ask; install as planned (desktop apps only with `--gui`). |
+| `-y`, `--yes` | Do not ask; install as planned (command-line and desktop apps). |
 | `--dry-run` | Print the plan and exit. Creates no folders, no log, no downloads. It validates the lock file first, and runs only the programs the kit itself verified and installed (`<app>-cli --version` / `--help`); any other file in `--prefix` is not run. |
 | `--only a,b` | Only these apps (skills and hooks are still installed). `--only all` selects all 13. |
-| `--gui` / `--no-gui` | Also install the desktop apps / do not install or ask about them. |
+| `--no-gui` | Skip the desktop apps (command-line apps only). |
 | `--workspace DIR` | Workspace root, one folder per app. Default `~/craft-workspace`. |
 | `--prefix DIR` | Where the `<app>-cli` programs and `craft-sandbox` go. Default `~/.local/bin`. |
 | `--gui-dir DIR` | Where desktop apps go. Default `/Applications` if you can write there, else `~/Applications`. |
@@ -122,7 +122,7 @@ Where things go:
 | MCP servers | Claude Code's user-scope config, changed only through `claude mcp add` / `claude mcp remove` |
 | Skills | `~/.claude/skills/craft-*/SKILL.md` |
 | Hooks | two `PreToolUse` entries in `~/.claude/settings.json` (one timestamped backup per run, made before the first change) |
-| Desktop apps (only with `--gui`) | `/Applications` or `~/Applications` |
+| Desktop apps (unless `--no-gui`) | `/Applications` or `~/Applications` |
 
 [Back to top](#craft-claude-kit)
 
@@ -130,7 +130,7 @@ Where things go:
 
 The installer downloads each file from the official GitHub release and refuses it unless its SHA-256 matches the one pinned in [`manifest/apps.lock.json`](manifest/apps.lock.json).
 
-| App | Version | Command-line app | Desktop app (optional) |
+| App | Version | Command-line app | Desktop app |
 |---|---|---|---|
 | WordCraft | 0.7.0 | 86 MB | 105 MB |
 | GridCraft | 0.7.0 | 11 MB | 25 MB |
@@ -147,7 +147,7 @@ The installer downloads each file from the official GitHub release and refuses i
 | SoundCraft | 0.7.0 | 6.7 MB | 23 MB |
 | **Total** | | **821 MB** | **1.0 GB** |
 
-Sizes are decimal megabytes, as GitHub shows them. Unpacked, the 13 command-line programs took about 1.7 GB on the machine this was developed on, and the 13 desktop apps about 2 GB. The plan warns you if free space looks too low. A program the kit verified and installed earlier (same SHA-256 as recorded in the receipt) is skipped, so a re-run downloads nothing. A program of that name that the kit did not install, or that changed since, is replaced by the verified download (marked `replace*` in the plan), and it is not run before that. A download that stalls (under 1 KB/s for a minute) fails and is retried.
+Sizes are decimal megabytes, as GitHub shows them. A default install downloads both columns, about 1.9 GB. Unpacked, the 13 command-line programs took about 1.7 GB on the machine this was developed on, and the 13 desktop apps about 2 GB. The plan warns you if free space looks too low. A program the kit verified and installed earlier (same SHA-256 as recorded in the receipt) is skipped, so a re-run downloads nothing. A program of that name that the kit did not install, or that changed since, is replaced by the verified download (marked `replace*` in the plan), and it is not run before that. A download that stalls (under 1 KB/s for a minute) fails and is retried.
 
 [Back to top](#craft-claude-kit)
 
@@ -196,7 +196,7 @@ cd craft-claude-kit && git pull && ./install.sh
 
 A re-run uses the same workspace, `--prefix`, `--gui-dir` and app selection as before (see [Install options](#install-options)). It upgrades any app whose installed version differs from the version this kit pins, re-registers servers whose command line differs, refreshes the skills (a skill you edited is first copied to `SKILL.md.bak-<timestamp>`), re-registers the hooks and refreshes the runtime copy. Nothing updates in the background. The kit installs the versions it was verified against, not "latest": new upstream releases arrive when a new kit release re-pins them.
 
-Desktop apps that are already installed at another version are left alone, with a warning. To switch, quit the app, move it to the Trash yourself and re-run with `--gui`.
+Desktop apps that are already installed at another version are left alone, with a warning. To switch, quit the app, move it to the Trash yourself and re-run.
 
 [Back to top](#craft-claude-kit)
 
@@ -207,7 +207,7 @@ Desktop apps that are already installed at another version are left alone, with 
 ~/.local/share/craft-claude-kit/uninstall.sh
 ```
 
-It reads the receipt the installer wrote and removes only what the kit owns: MCP servers whose command points into the kit's folders (never a registration you made yourself), the `craft-*` skills (one you edited is kept), the kit's two hook entries (with a backup of `settings.json`), `craft-sandbox`, the command-line programs the kit installed (one you replaced since, or one from an older receipt without a checksum, is kept), and the kit folder. Options: `-y`/`--yes`, `--keep-cli`, `--keep-skills`, `--keep-hooks`, and `--remove-gui`, which moves the desktop apps *the kit installed* to the Trash (not any that are running). **Your workspace is never deleted**; the uninstaller prints its path and size. Exit codes: `0` ok, `1` something could not be removed, `2` usage error, `3` no usable receipt, `4` declined or no terminal and no `--yes`. Open a new Claude Code session afterwards.
+It reads the receipt the installer wrote and removes only what the kit owns: MCP servers whose command points into the kit's folders (never a registration you made yourself), the `craft-*` skills (one you edited is kept), the kit's two hook entries (with a backup of `settings.json`), `craft-sandbox`, the command-line programs the kit installed (one you replaced since, or one from an older receipt without a checksum, is kept), and the kit folder. Options: `-y`/`--yes`, `--keep-cli`, `--keep-gui`, `--keep-skills` and `--keep-hooks`. By default it also moves the desktop apps *the kit installed* to the Trash (never one that is running, never one you replaced); `--keep-gui` keeps them. **Your workspace is never deleted**; the uninstaller prints its path and size. Exit codes: `0` ok, `1` something could not be removed, `2` usage error, `3` no usable receipt, `4` declined or no terminal and no `--yes`. Open a new Claude Code session afterwards.
 
 Deleted `~/.local/share/craft-claude-kit` by hand? Run `./uninstall.sh` from your clone. Without the receipt it removes what clearly belongs to the kit (its hook entries, its `craft-sandbox` and the MCP servers that run through it) and lists, with the commands to remove them, the MCP servers that point into the programs folder, the skills and the programs it cannot attribute; it exits 1 while such a server is still registered. It finds the programs folder from the registrations; pass `--prefix DIR` if that fails. A symlinked kit folder (for example a dotfiles-managed `~/.local`) is handled; the clone's `uninstall.sh` always works. Until then the hooks do no harm: their command ends in `|| true`, so a missing script never blocks a tool call. For a complete removal, run `./install.sh` first (it restores the receipt), then the uninstaller.
 
@@ -256,7 +256,7 @@ Known limits: the servers are headless, so window tools (`click`, `key`, `pointe
 
 ## FAQ
 
-**Do I need the desktop apps?** No. Claude uses the command-line programs, which work without a window. The desktop apps are for opening documents yourself; add `--gui` if you want them.
+**Do I need the desktop apps?** Claude itself does not: it drives the command-line programs, which work without a window. They are installed too so you can open the documents, spreadsheets and images Claude makes in the matching Craft app.
 
 **Can Claude open an app window or use a running app?** Not through this kit. The servers are headless and the sandbox has no network.
 

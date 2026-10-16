@@ -30,7 +30,7 @@ case "$0" in */*) SELF=$0 ;; *) SELF=./$0 ;; esac
 TS=$(date +%Y%m%d-%H%M%S)
 BACKUP_NOTES=""
 
-YES=0 DRY_RUN=0 ONLY="" GUI_MODE=ask DO_SKILLS=1 DO_HOOKS=1 DO_MCP=1
+YES=0 DRY_RUN=0 ONLY="" GUI_MODE=yes DO_SKILLS=1 DO_HOOKS=1 DO_MCP=1
 OPT_WORKSPACE="" OPT_PREFIX="" OPT_GUI_DIR="" OPT_OFFLINE="" GUI_FLAG_SEEN=""
 ARGS_TEXT="$*"
 
@@ -38,7 +38,8 @@ usage() {
   cat <<'EOF'
 Usage: ./install.sh [options]
 
-Installs the 13 Craft apps from their official GitHub releases (SHA-256 verified), registers each
+Installs the 13 Craft apps, as command-line programs (the ones Claude uses) and as desktop apps (to open
+the files yourself), from their official GitHub releases (SHA-256 verified), registers each
 one as a Claude Code MCP server confined to its own workspace folder, and installs the Craft skills
 and two ask-only safety hooks. It shows the full plan, with download sizes, and asks once before
 changing anything. Re-running it is safe: it repairs what is missing and skips what is up to date.
@@ -46,11 +47,10 @@ A re-run keeps the workspace, --prefix, --gui-dir and app selection of the previ
 you pass them again.
 
 Options:
-  -y, --yes             do not ask; install as planned (desktop apps only with --gui)
+  -y, --yes             do not ask; install as planned (command-line apps and desktop apps)
       --dry-run         show the plan and exit; changes nothing
       --only APP,APP    only these apps (skills and hooks are still installed); --only all for all 13
-      --gui             also install the desktop apps (.app bundles)
-      --no-gui          do not install or ask about the desktop apps
+      --no-gui          skip the desktop apps (command-line apps only)
       --workspace DIR   workspace root, one folder per app (default: ~/craft-workspace)
       --prefix DIR      where the <app>-cli programs and craft-sandbox go (default: ~/.local/bin)
       --gui-dir DIR     where desktop apps go (default: /Applications if writable, else ~/Applications)
@@ -664,7 +664,7 @@ print_plan() {
   printf '  CLI = the <app>-cli program. FENCE keeps each server in its own folder: roots/root =\n'
   printf '  the app'"'"'s own folder flags, sandbox = the macOS sandbox (craft-sandbox).\n'
   printf '  MCP SERVER = the entry that lets Claude Code use the app (docs/FENCES.md).\n'
-  [ "$GUI_MODE" != ask ] || printf '  DESKTOP applies only if you choose the desktop apps.\n'
+  [ "$GUI_MODE" = no ] || printf '  DESKTOP = the windowed app, to open the files yourself.\n'
   if [ "$any_replace" = 1 ]; then
     printf '  * replace: a program of that name is there that the kit did not install or cannot\n'
     printf '    verify; it is replaced by the verified download and is not run before that.\n'
@@ -678,13 +678,6 @@ print_plan() {
   printf '  Download now: %s for %s command-line app(s)' "$(ck_mb "$dl_cli")" "$n_cli"
   case "$GUI_MODE" in
     yes) printf ' + %s for %s desktop app(s)\n' "$(ck_mb "$dl_gui")" "$n_gui" ;;
-    ask)
-      if [ "$DRY_RUN" = 1 ]; then
-        printf '\n  Desktop apps are optional: + %s for %s more with --gui\n' "$(ck_mb "$dl_gui")" "$n_gui"
-      else
-        printf '\n  Desktop apps are optional: + %s for %s more if you choose them at the prompt\n' "$(ck_mb "$dl_gui")" "$n_gui"
-      fi
-      ;;
     *)
       dl_gui=0
       for app in $APPS; do dl_gui=$((dl_gui + $(ck_get "L_gsize_$app"))); done
@@ -727,7 +720,7 @@ print_plan() {
     fi
   fi
   if [ "$GUI_MODE" != no ]; then
-    printf '    %s  desktop apps%s; existing apps are never replaced\n' "$(ck_tilde "$GUI_DIR")" "$([ "$GUI_MODE" = ask ] && printf ' (only if you choose them)')"
+    printf '    %s  desktop apps%s; existing apps are never replaced\n' "$(ck_tilde "$GUI_DIR")" ""
   fi
   local legacy=""
   [ ! -f "$HOME/$CK_LEGACY_HOOK_REL" ] || [ "$DO_HOOKS" = 0 ] || legacy="$legacy ~/$CK_LEGACY_HOOK_REL"
@@ -1610,26 +1603,17 @@ on_signal() {
 confirm() {
   local answer
   if [ "$YES" = 1 ]; then
-    [ "$GUI_MODE" != ask ] || GUI_MODE=no
     return 0
   fi
   if [ ! -t 0 ]; then
     printf '\nNot running in an interactive terminal, so nothing was changed.\n' >&2
-    printf 'To install as planned, run: %s --yes   (add --gui to include the desktop apps)\n' "$SELF" >&2
+    printf 'To install as planned, run: %s --yes\n' "$SELF" >&2
     exit 4
   fi
-  if [ "$GUI_MODE" = ask ]; then
-    printf '\nInstall now?  [y] yes   [g] yes, and the desktop apps too   [N] no : '
-  else
-    printf '\nInstall now? [y/N] : '
-  fi
+  printf '\nInstall now? [y/N] : '
   IFS= read -r answer || answer=""
   case "$answer" in
-    y | Y | yes | YES | Yes) [ "$GUI_MODE" != ask ] || GUI_MODE=no ;;
-    g | G | gui | GUI)
-      if [ "$GUI_MODE" = ask ]; then GUI_MODE=yes; else
-        printf 'Nothing was changed.\n'; exit 4; fi
-      ;;
+    y | Y | yes | YES | Yes) ;;
     "" | n | N | no | NO | No) printf 'Nothing was changed.\n'; exit 4 ;;
     *) printf 'Did not understand "%s", so this is taken as No. Nothing was changed.\n' "$answer"; exit 4 ;;
   esac
@@ -1657,7 +1641,6 @@ main() {
   trap on_exit EXIT
   trap on_signal INT TERM
 
-  [ "$YES" = 0 ] || [ "$GUI_MODE" != ask ] || GUI_MODE=no
   plan_all
   local plan_text
   plan_text=$(print_plan)

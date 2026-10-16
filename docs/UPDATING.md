@@ -27,7 +27,7 @@ date. Nothing updates in the background. What a re-run does to each part:
 | Skills | Re-rendered; identical ones are skipped; one you edited is first saved as `SKILL.md.bak-<timestamp>` |
 | Hooks | Re-registered; an outdated entry of the kit's own is removed first; a backup of `settings.json` is made before any change |
 | Runtime copy in `~/.local/share/craft-claude-kit` and `craft-sandbox` | Files that differ are replaced |
-| Desktop apps (`--gui`) | Skipped at the pinned version; **left alone**, with a warning, at any other version. To switch: quit the app, move it to the Trash yourself, re-run with `--gui` |
+| Desktop apps | Skipped at the pinned version; **left alone**, with a warning, at any other version. To switch: quit the app, move it to the Trash yourself, re-run |
 | Your workspace and the files in it | Never touched |
 
 Notes:
@@ -203,7 +203,7 @@ program the kit installed), `apps.<app>.guiVersion` (version of the desktop app 
 `hooksSha256`. Consequences for an install made before they existed, until the next `./install.sh` run records
 them: the next run replaces each `<app>-cli` once with the verified download (it cannot tell the old file is the
 kit's; about 819 MB for all 13), `uninstall.sh` keeps the programs (no checksum to prove they are the kit's) and,
-with `--remove-gui`, keeps the desktop apps (no recorded version), and `doctor.sh` WARNs that the checksums are
+also keeps the desktop apps (no recorded version), and `doctor.sh` WARNs that the checksums are
 missing.
 
 [Back to top](#updating)

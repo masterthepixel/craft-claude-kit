@@ -128,7 +128,7 @@ What this does not give you:
 
 #### Not Fenced at All
 
-- **The desktop apps** (`--gui` installs them). They run as you with full access. The MCP servers never use them, and the skills tell the agent not to start them.
+- **The desktop apps** (installed by default). They run as you with full access. The MCP servers never use them, and the skills tell the agent not to start them.
 - **Live-app modes** of the command-line tools (`--connect`, `--bridge`, `--attach`, `--control`). The built-in root flags do not confine a live app; the shell guard asks before any shell command that launches a Craft app or tool, and the skills forbid these modes.
 - **Anything else the agent can run**: other MCP servers, other skills, and the shell. The shell guard looks at the Bash tool, the terminal tool `mcp__terminal__run_in_terminal`, `Monitor`, and computer-use `open_application` (read as `open -a <app>`); it cannot see `computer_batch` or what an app does once it runs.
 
@@ -185,7 +185,7 @@ What the guarantee is: the bytes that get installed are the bytes whose hash is 
 - MCP servers are added and removed only through `claude mcp add|remove -s user` for the kit's own 13 names. A different existing registration under one of those names is replaced, and the installer says so.
 - Skills are rendered into `~/.claude/skills/craft-*`; a changed existing copy is backed up first.
 - Workspace folders are created with mode 700.
-- A receipt (`~/.local/share/craft-claude-kit/receipt.json`) records what was installed. `uninstall.sh` removes only what the receipt says the kit owns: registrations that point into the kit's folders, the kit's skills and hook entries, the CLIs that still have the SHA-256 the kit recorded, the sandbox wrapper and profile; desktop apps only with `--remove-gui` and only at the version the kit installed (moved to the Trash). **It never deletes the workspace.** Without a receipt (kit folder deleted by hand) it removes only the hook entries, its wrapper and the registrations through that wrapper, and lists the rest.
+- A receipt (`~/.local/share/craft-claude-kit/receipt.json`) records what was installed. `uninstall.sh` removes only what the receipt says the kit owns: registrations that point into the kit's folders, the kit's skills and hook entries, the CLIs that still have the SHA-256 the kit recorded, the sandbox wrapper and profile; desktop apps only at the version the kit installed (moved to the Trash; `--keep-gui` keeps them). **It never deletes the workspace.** Without a receipt (kit folder deleted by hand) it removes only the hook entries, its wrapper and the registrations through that wrapper, and lists the rest.
 - Temporary folders are private (`mktemp -d`) and removed on exit and on Ctrl-C.
 - Tests run the installer, uninstaller and doctor only inside `tests/isolated.sh`: a throw-away home folder, a fake `claude`, and tiny fixture archives. A test checks that a real home folder is left untouched.
 
@@ -236,7 +236,7 @@ What was tested, and how, is in [docs/VERIFICATION.md](docs/VERIFICATION.md). St
 - Keep prompts on for anything you would not want done twice. The fences limit blast radius; they do not make actions reversible.
 - Copy files into `<workspace>/<app>/in/` rather than moving them, and keep originals elsewhere. The agent can still change or delete anything inside the workspace.
 - Treat everything in `out/` as untrusted output of an agent that may have read hostile content, especially before opening it in another program. Generated documents can contain links and other active content.
-- Do not install the desktop apps unless you need them (`--no-gui`). They are not fenced.
+- The desktop apps are not fenced. If you will never open the files yourself, skip them with `--no-gui`.
 - Re-run `./doctor.sh` after a macOS update, after an app update and after changing the workspace. Run `./doctor.sh --smoke` to see each server do real work.
 - Do not paste crash reports or full command output into issues without removing your user name and paths.
 

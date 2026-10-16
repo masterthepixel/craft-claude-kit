@@ -189,7 +189,7 @@ run it again: finished parts are skipped. The log is `~/.local/share/craft-claud
 | You see | Cause and fix |
 |---|---|
 | `Cannot install yet:` then a list (exit 3) | A required tool, the Claude Code CLI, an unwritable folder or an old macOS. Each item has a `fix:`. Nothing was changed. |
-| `Not running in an interactive terminal, so nothing was changed.` (exit 4) | It will not guess without a terminal. Re-run with `--yes` (add `--gui` for desktop apps). |
+| `Not running in an interactive terminal, so nothing was changed.` (exit 4) | It will not guess without a terminal. Re-run with `--yes`. |
 | `--workspace must be a folder of its own ...`, `the workspace ... must not be inside the kit folder` or `... inside the kit checkout` | Pick a dedicated folder such as `~/craft-workspace`; not your home folder, not under `--prefix`, not under the kit's runtime folder (uninstall removes that), not inside your clone (a relative `--workspace` is taken from the current folder). |
 | `do not run this with sudo or as root` (exit 3) | Run it as yourself, without `sudo`. With `sudo` the files would belong to root but land in your home folder. |
 | `Did not understand "...", so this is taken as No.` | Answer `y`, `g` or `n` at the prompt. |
@@ -207,7 +207,7 @@ run it again: finished parts are skipped. The log is `~/.local/share/craft-claud
 | `<settings.json> cannot be edited safely, hooks not changed: ... line N column M ...` | The kit edits `settings.json` only as strict JSON (no comments, no trailing commas, no duplicate keys). Fix the spot the message names; the rest of the install continued. Re-run to add the hooks. |
 | `<hook>.py does not run with this python3 ...; not registered` | A broken or very old `python3`. Fix it, re-run. |
 | `<skill>: ... is a symlink; left alone` | You linked that skill from somewhere (a dotfiles repo). The kit will not write through it. Remove the link to let the kit manage the skill. |
-| `<App>.app is already in <dir> at version X; left untouched (the kit pins Y)` | By design. To switch, quit the app, move it to the Trash yourself, re-run with `--gui`. |
+| `<App>.app is already in <dir> at version X; left untouched (the kit pins Y)` | By design. To switch, quit the app, move it to the Trash yourself, re-run. |
 | `code signature check failed for <App>.app; not installed` | The copy taken from the disk image did not pass `codesign --verify --deep --strict`. Nothing was installed. Re-run once; if it repeats, open an issue with the output of `codesign --verify --deep --strict --verbose=2` on the mounted app. (Desktop installation has been tested only with fixture images; see [VERIFICATION.md](VERIFICATION.md).) |
 | `low disk space: about X needed, Y free` | The estimate is rough and conservative (unpacked programs are about 1.7 GB for all 13). Free space or install fewer apps with `--only`. |
 
@@ -282,11 +282,11 @@ installer (or was copied through a browser or a sync tool that adds the quaranti
 off. Re-run `./install.sh --only <app>` so the program is the pinned, checksummed file, and check the signature as
 above. The kit never removes quarantine attributes and never disables Gatekeeper.
 
-**Desktop apps (`--gui`).** The installer verifies the bundle with `codesign --verify --deep --strict` before
+**Desktop apps.** The installer verifies the bundle with `codesign --verify --deep --strict` before
 installing it and prints what `spctl --assess` says. If it says "Gatekeeper does not pre-approve it", macOS may ask you
 to confirm the first launch: use the system's own route (right-click the app, Open; or System Settings, Privacy &
 Security, "Open Anyway") once you have checked the signature. The kit never launches the desktop apps itself. Desktop
-installation was tested only with fixture disk images, not with the real ones (see
+installation was run on the real disk images once, on a clean account (13 of 13), and otherwise on fixture disk images (see
 [VERIFICATION.md](VERIFICATION.md)).
 
 **Other prompts.** Because the servers run as children of Claude Code, macOS may ask whether your terminal or Claude
@@ -303,7 +303,7 @@ the default `~/craft-workspace` avoids that (general macOS behavior, not specifi
 | `The receipt ... cannot be trusted` (exit 3) | A path in it looks wrong (not absolute, a system folder, your home folder itself, the prefix or Claude folder inside the kit folder ...), or it was written for another kit folder. Run `./uninstall.sh` from your clone of the kit (it always works), or re-run `./install.sh` from it, then uninstall. A kit folder reached through a symlink (for example a dotfiles-managed `~/.local`) is accepted. |
 | `Claude Code CLI not found; registrations left in place` | Remove them yourself with the printed `claude mcp remove <app> -s user` commands. |
 | `<skill> kept: it was changed after install` | By design; delete `~/.claude/skills/<skill>` yourself if you do not want it. |
-| `desktop apps that are running now (quit them first)` | Quit them and run again with `--remove-gui`. |
+| `desktop apps that are running now (quit them first)` | Quit them and run again. |
 | `kept <kit folder> so the uninstaller can be run again` | Something failed, or `--keep-hooks` was given and a hook still points into that folder. Fix, then run again. |
 | `cleanup without a receipt` | You ran `./uninstall.sh` from the clone after the kit folder was deleted. It removes the kit's hook entries, its `craft-sandbox` and the MCP servers that run through it, lists the other Craft MCP servers in the programs folder with their `claude mcp remove` commands (exit 1 while they remain), and prints `rm` commands for the skills and programs (it cannot prove they are the kit's). It takes the programs folder from the registrations; pass `--prefix DIR` if that is wrong. For a full removal run `./install.sh` first, then uninstall. |
 | `Nothing to uninstall: ... does not exist, and ... has no hook entry of the kit ...` | No sign of the kit: no kit folder, no hook entry pointing into it, no kit `craft-sandbox`. |

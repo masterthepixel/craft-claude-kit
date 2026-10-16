@@ -36,7 +36,7 @@ Columns:
 - **Fence**: `roots` = the app's `--automation-read-root` and `--automation-write-root`; `root` = its `--root`;
   `sandbox` = `craft-sandbox` (macOS `sandbox-exec`, no network). Details and limits: [FENCES.md](FENCES.md).
 - **Downloads** are the sizes of the release files on GitHub (decimal megabytes, as GitHub shows them). The command
-  line apps are what the installer fetches by default; the desktop apps only with `--gui` and are optional. A
+  line apps and the desktop apps are both fetched by default. A
   re-run downloads only what is missing or at another version.
 - **CLI on disk** is the size of the installed `<app>-cli` program, measured on the development machine.
 - **Tools** is the number of MCP tools the server lists, from the snapshot in `data/tools/<app>.json`. LightCraft's

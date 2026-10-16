@@ -105,7 +105,7 @@ In words:
  ~/.claude/skills/craft-*/SKILL.md   (14, rendered) mention the absolute workspace path
                              and <runtime copy>/doctor.sh; no "~" and no placeholders are left
  ~/craft-workspace/<app>/in/  out/   (mode 700) the only folder each server may use
- /Applications/<App>.app             only with --gui; the kit never launches it
+ /Applications/<App>.app             by default; the kit never launches it
 ```
 
 Everything the system needs after installation lives at the paths listed below the clone, and none of it in the clone, so
@@ -125,7 +125,7 @@ deleting or moving your clone breaks nothing. The paths are the defaults; `--pre
 | `~/.claude.json` (user scope) | The 13 server registrations | `claude mcp add` / `remove` | Yes, only ones whose command is the kit's |
 | `~/.claude/skills/craft-*/SKILL.md` (14) | The rendered skills | `install.sh` | Yes, unless you edited one |
 | `~/.claude/settings.json` | Two `PreToolUse` hook entries | `lib/settings_edit.py`, backup first | Yes (the two entries) |
-| `/Applications` or `~/Applications` | Desktop apps, only with `--gui` | `install.sh` | Only with `--remove-gui`, to the Trash |
+| `/Applications` or `~/Applications` | Desktop apps | `install.sh` | By `uninstall.sh`, to the Trash (`--keep-gui` keeps them) |
 
 If you set `CLAUDE_CONFIG_DIR`, the skills and `settings.json` live there and the registrations are in
 `$CLAUDE_CONFIG_DIR/.claude.json`. `--prefix`, `--workspace`, `--gui-dir` and `CRAFT_KIT_HOME` move the other
@@ -222,7 +222,7 @@ keys back, so the update command keeps your choices.
 
 1. **Preflight.** Checks macOS 13+, `curl`, `unzip`, `shasum`, `jq`, `python3` 3.9+ (and that it runs at all: on a
    Mac without the Command Line Tools `/usr/bin/python3` only offers to install them), and (unless `--no-mcp`) the
-   `claude` command and `/usr/bin/sandbox-exec`; with `--gui` also `hdiutil` and `ditto`. It validates every field
+   `claude` command and `/usr/bin/sandbox-exec`; unless `--no-gui`, also `hdiutil` and `ditto`. It validates every field
    of the lock (sizes are whole numbers, URLs are `https://github.com/`, bundle names are plain `<Name>.app`,
    `extraArgs` is the known per-app list and never a fence flag) and the folders (see `CRAFT_KIT_HOME` above).
    Anything wrong is listed with a fix, and nothing is changed (exit 3).
@@ -232,8 +232,8 @@ keys back, so the update command keeps your choices.
    right, replace, or "no fence flag"), looks at the desktop app, the skills and the hooks, estimates disk space,
    and prints the download sizes and every file or setting it may create or change. `--dry-run` stops here and
    creates nothing, not even a log file.
-3. **Confirm.** One prompt. Without a terminal it exits 4 unless `--yes` is given. Desktop apps are asked about
-   only when neither `--gui` nor `--no-gui` was given and a terminal is attached.
+3. **Confirm.** One prompt. Without a terminal it exits 4 unless `--yes` is given. Both the command-line and the
+   desktop apps are installed by default.
 4. **Runtime.** Copies the runtime files into `CRAFT_KIT_HOME`, installs `craft-sandbox` into the prefix (an
    unrelated file of that name is kept as `craft-sandbox.bak-<timestamp>`), and moves the older hand-made
    `craft-sandbox` profile aside if one is there (see "Migration From an Older Hand-Made Setup" below).
@@ -244,7 +244,7 @@ keys back, so the update command keeps your choices.
    it beside its destination; run it with `--version` and require the pinned version; move it into place
    atomically. Then create `<workspace>/<app>/{in,out}` with mode 700, and register the server. The only things
    run from a download are `--version` and `--help`.
-6. **Desktop apps** (only if chosen). Download the disk image, verify its SHA-256, mount it read-only and
+6. **Desktop apps** (the default). Download the disk image, verify its SHA-256, mount it read-only and
    `-nobrowse`, copy the bundle with `ditto` to a temporary name, detach (always, also on Ctrl-C), require
    `codesign --verify --deep --strict` to pass, then move it into place and report what `spctl --assess` says. An
    app that is already installed at another version is left alone, with a warning.
@@ -330,7 +330,7 @@ once, then removes in this order:
    folder) is accepted.
 2. The kit's hook entries (with a backup of `settings.json`),
 3. The skills that are unchanged since install (an edited or symlinked one is kept),
-4. Desktop apps, only with `--remove-gui`, only ones the receipt says the kit installed and still at the version
+4. Desktop apps (unless `--keep-gui`), only ones the receipt says the kit installed and still at the version
    it recorded, not running ones, moved to the Trash,
 5. The `<app>-cli` programs that still have the SHA-256 the kit recorded (a program you replaced since, or one
    from an older receipt without a SHA-256, is kept and listed), and `craft-sandbox`,
@@ -354,8 +354,8 @@ success.
 
 ## Design Decisions
 
-- **Headless command-line apps by default.** Claude drives an engine, not a window. The desktop apps are
-  optional and the kit never launches them. The window-only tools (`click`, `key`, `pointer`, `ui_*`, and
+- **Headless command-line apps that Claude drives, plus the desktop apps by default.** Claude drives an engine, not a
+  window. The desktop apps are there for you to open the files yourself, and the kit never launches them. The window-only tools (`click`, `key`, `pointer`, `ui_*`, and
   `screenshot` in some apps) do not work headless; every app except GridCraft and SoundCraft has a render or
   preview tool instead ([APPS.md](APPS.md)).
 - **User-scope registration with absolute paths.** One registration works in every project and does not depend on
